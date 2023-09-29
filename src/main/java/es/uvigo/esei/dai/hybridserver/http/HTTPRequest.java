@@ -26,7 +26,7 @@ public class HTTPRequest {
 	
 	HTTPRequestMethod method;
 	String resourceChain;
-	String resourcePath;
+	String [] resourcePath;
 	String resourceName;
 	Map<String,String> headerParameters;
 	String content;
@@ -65,12 +65,16 @@ public class HTTPRequest {
 	  		break;
 	  	default: 
 	  		System.err.println("HTTP Request Method not expected.");
+	  		throw new HTTPParseException();
 	  }
+	  
+	  this.resourceChain = lineWords[1];
+	  this.resourcePath = lineWords[1].split("/");
+	  this.resourceName = lineWords[1].substring(1);
   }
 
   public HTTPRequestMethod getMethod() {
-    // TODO Completar
-    return null;
+    return this.method;
   }
 
   public String getResourceChain() {
