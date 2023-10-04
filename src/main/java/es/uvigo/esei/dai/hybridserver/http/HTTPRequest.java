@@ -20,7 +20,10 @@ package es.uvigo.esei.dai.hybridserver.http;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class HTTPRequest {
 	
@@ -28,40 +31,45 @@ public class HTTPRequest {
 	String resourceChain;
 	String [] resourcePath;
 	String resourceName;
+	String httpVersion;
 	Map<String,String> headerParameters;
+	Map<String, String> resourceParameters;
 	String content;
-	int contentLength;
+	int contentLength = 0;
 	
   public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
-    // TODO Completar. Cualquier error en el procesado debe lanzar una HTTPParseException
 	  BufferedReader bReader = new BufferedReader(reader);
 	  String [] lineWords =  bReader.readLine().split(" ");
+	  this.headerParameters = new LinkedHashMap<String, String>();
+	  this.resourceParameters = new LinkedHashMap<String, String>();
 	  
-	  //Get HTTPRequest Method
+	  if(lineWords==null) throw new HTTPParseException();
+	  
+	//Get HTTPRequest Method
 	  switch(lineWords[0]) {
 	  	case "GET":
-	  		method = HTTPRequestMethod.GET;
+	  		this.method = HTTPRequestMethod.GET;
 	  		break;
 	  	case "CONNECT":
-	  		method = HTTPRequestMethod.CONNECT;
+	  		this.method = HTTPRequestMethod.CONNECT;
 	  		break;
 	  	case "DELETE":
-	  		method = HTTPRequestMethod.DELETE;
+	  		this.method = HTTPRequestMethod.DELETE;
 	  		break;
 	  	case "HEAD":
-	  		method = HTTPRequestMethod.HEAD;
+	  		this.method = HTTPRequestMethod.HEAD;
 	  		break;
 	  	case "OPTIONS":
-	  		method = HTTPRequestMethod.OPTIONS;
+	  		this.method = HTTPRequestMethod.OPTIONS;
 	  		break;
 	  	case "POST":
-	  		method = HTTPRequestMethod.POST;
+	  		this.method = HTTPRequestMethod.POST;
 	  		break;
 	  	case "PUT":
-	  		method = HTTPRequestMethod.PUT;
+	  		this.method = HTTPRequestMethod.PUT;
 	  		break;
 	  	case "TRACE":
-	  		method = HTTPRequestMethod.TRACE;
+	  		this.method = HTTPRequestMethod.TRACE;
 	  		break;
 	  	default: 
 	  		System.err.println("HTTP Request Method not expected.");
@@ -69,8 +77,21 @@ public class HTTPRequest {
 	  }
 	  
 	  this.resourceChain = lineWords[1];
-	  this.resourcePath = lineWords[1].split("/");
+	  if(lineWords[1].length()>1) {
+		  this.resourcePath = lineWords[1].substring(1).split("/");
+	  }else {
+		  this.resourcePath = new String[0];
+	  }
 	  this.resourceName = lineWords[1].substring(1);
+	  this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
+	  
+	  lineWords =  bReader.readLine().split(" ");
+	  while(lineWords[0].length() > 0) {
+		  String header = lineWords[0].substring(0,lineWords[0].length()-1);
+		  String content = lineWords[1];
+		  this.headerParameters.put(header, content);
+		  lineWords =  bReader.readLine().split(" ");
+	  }
   }
 
   public HTTPRequestMethod getMethod() {
@@ -78,43 +99,35 @@ public class HTTPRequest {
   }
 
   public String getResourceChain() {
-    // TODO Completar
-    return null;
+    return this.resourceChain;
   }
 
   public String[] getResourcePath() {
-    // TODO Completar
-    return null;
+    return this.resourcePath;
   }
 
   public String getResourceName() {
-    // TODO Completar
-    return null;
+    return this.resourceName;
   }
 
   public Map<String, String> getResourceParameters() {
-    // TODO Completar
-    return null;
+    return this.resourceParameters;
   }
 
   public String getHttpVersion() {
-    // TODO Completar
-    return null;
+    return this.httpVersion;
   }
 
   public Map<String, String> getHeaderParameters() {
-    // TODO Completar
-    return null;
+    return this.headerParameters;
   }
 
   public String getContent() {
-    // TODO Completar
-    return null;
+    return this.content;
   }
 
   public int getContentLength() {
-    // TODO Completar
-    return -1;
+    return this.contentLength;
   }
 
   @Override
