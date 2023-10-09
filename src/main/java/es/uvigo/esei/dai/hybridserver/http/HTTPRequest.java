@@ -78,11 +78,13 @@ public class HTTPRequest {
 	  
 	  this.resourceChain = lineWords[1];
 	  if(lineWords[1].length()>1) {
-		  this.resourcePath = lineWords[1].substring(1).split("/");
+		  this.resourcePath = new String [2];
+		  this.resourcePath[0] = lineWords[1].substring(1).split("/")[0];
+		  this.resourcePath[1] = lineWords[1].substring(1).split("/")[1].split("\\?")[0];
 	  }else {
 		  this.resourcePath = new String[0];
 	  }
-	  this.resourceName = lineWords[1].substring(1);
+	  this.resourceName = lineWords[1].substring(1).split("\\?")[0];
 	  this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
 	  
 	  lineWords =  bReader.readLine().split(" ");
@@ -92,6 +94,24 @@ public class HTTPRequest {
 		  this.headerParameters.put(header, content);
 		  lineWords =  bReader.readLine().split(" ");
 	  }
+	  String line = bReader.readLine();
+	  String message = "";
+	  String [] messages;
+	  
+	  while(line != null && !line.isEmpty()) {
+		  message += line;
+		  messages = line.split("&");
+		  for(int i=0; i<messages.length; i++) {
+			  this.resourceParameters.put(messages[i].split("=")[0], messages[i].split("=")[1]);
+		  }
+		  line = bReader.readLine();
+	  }
+	  if(!message.isEmpty()) {
+		  this.content = message;
+		  this.contentLength = message.length();
+	  }
+	  
+
   }
 
   public HTTPRequestMethod getMethod() {
