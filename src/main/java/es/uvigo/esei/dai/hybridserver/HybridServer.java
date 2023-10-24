@@ -24,11 +24,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.lang.Runnable;
 
 public class HybridServer implements AutoCloseable {
   private static final int SERVICE_PORT = 8888;
   private Thread serverThread;
   private boolean stop;
+  
+  private ExecutorService threadPool;
 
   public HybridServer() {
     // TODO Inicializar con los parámetros por defecto
@@ -51,15 +56,17 @@ public class HybridServer implements AutoCloseable {
       @Override
       public void run() {
         try (final ServerSocket serverSocket = new ServerSocket(SERVICE_PORT)) {
-          while (true) {
-            try (Socket socket = serverSocket.accept()) {
-              if (stop)
-                break;
-
-              // TODO Responder al cliente
-              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            }
-          }
+        	threadPool = Executors.newFixedThreadPool(10);
+        	while (true) {
+        		Socket socket = serverSocket.accept();
+        		if (stop) break;
+		        try {
+		          ServiceThread st = new ServiceThread(socket);
+		          threadPool.execute(st);
+		        }catch(NullPointerException e) {
+		        	// TODO: handle exception
+		        }
+	      }
         } catch (IOException e) {
           e.printStackTrace();
         }

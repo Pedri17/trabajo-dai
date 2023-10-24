@@ -19,6 +19,8 @@ package es.uvigo.esei.dai.hybridserver;
 
 public class Launcher {
   public static void main(String[] args) {
-    // TODO Ejecutar el servidor
+    HybridServer server = new HybridServer();
+    server.start();
+    //server.close();
   }
 }
