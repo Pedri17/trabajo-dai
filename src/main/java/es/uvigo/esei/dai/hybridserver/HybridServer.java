@@ -34,6 +34,7 @@ public class HybridServer implements AutoCloseable {
   private boolean stop;
   
   private ExecutorService threadPool;
+  private UuidContentMap uuidContent;
 
   public HybridServer() {
     // TODO Inicializar con los parámetros por defecto
@@ -41,6 +42,7 @@ public class HybridServer implements AutoCloseable {
 
   public HybridServer(Map<String, String> pages) {
     // TODO Inicializar con la base de datos en memoria conteniendo "pages"
+	  uuidContent = new UuidContentMap(pages);
   }
 
   public HybridServer(Properties properties) {
@@ -55,18 +57,16 @@ public class HybridServer implements AutoCloseable {
     this.serverThread = new Thread() {
       @Override
       public void run() {
+    	  
         try (final ServerSocket serverSocket = new ServerSocket(SERVICE_PORT)) {
         	threadPool = Executors.newFixedThreadPool(10);
+        	
         	while (true) {
         		Socket socket = serverSocket.accept();
         		if (stop) break;
-		        try {
-		          ServiceThread st = new ServiceThread(socket);
-		          threadPool.execute(st);
-		        }catch(NullPointerException e) {
-		        	// TODO: handle exception
-		        }
-	      }
+        		ServiceThread st = new ServiceThread(socket, uuidContent);
+        		threadPool.execute(st);
+        	}
         } catch (IOException e) {
           e.printStackTrace();
         }
