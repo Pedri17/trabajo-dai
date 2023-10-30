@@ -7,7 +7,15 @@ public class HTMLController {
 		this.content = contentStructure;
 	}
 	
-	public HTMLDao getContent() {
+	public HTMLDao getData() {
 		return content;
+	}
+
+	public String getContent(String uuid){
+		return content.get(uuid);
+	}
+
+	public boolean contains(String uuid){
+		return content.get(uuid) != null;
 	}
 }

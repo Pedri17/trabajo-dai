@@ -33,13 +33,29 @@ public class ServiceThread implements Runnable {
 				
 				switch(request.getMethod()) {
 					case GET:
-						// De momento solo pueden ser get
-							String contenidoResultado = controller.getContent().get(request.getResourceParameters().get("uuid"));
-							if(contenidoResultado!=null){
-								response.setContent(contenidoResultado);
-							}else {
-								System.out.println("No se encuentra el UUID");
+						String requestUuid = request.getResourceParameters().get("uuid");
+						// Request message has a uuid field
+						if (requestUuid != null){
+							// Is a known uuid
+							if (controller.contains(requestUuid)){
+								String uuidContent = controller.getContent(requestUuid);
+								
+								response.setContent(uuidContent);
+								response.setStatus(HTTPResponseStatus.S200);
+								response.putParameter("Conten-Type", "text/html");
+							}else{
+							// TODO: Unknown uuid
 							}
+						}else{
+							StringBuilder res = new StringBuilder();
+							for(String uuid : controller.getData().list()){
+								res.append(uuid);
+							}
+
+							response.setContent(res.toString());
+							response.setStatus(HTTPResponseStatus.S200);
+						}
+						
 						break;
 				default:
 					System.out.println("Metodo no implementado de momento");
