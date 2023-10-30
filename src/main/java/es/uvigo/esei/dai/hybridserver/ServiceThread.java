@@ -13,11 +13,11 @@ import es.uvigo.esei.dai.hybridserver.http.HTTPResponseStatus;
 
 public class ServiceThread implements Runnable {
 	Socket socket;
-	UuidContentMap content;
+	HTMLController controller;
 	
-	public ServiceThread(Socket socket, UuidContentMap content) {
+	public ServiceThread(Socket socket, HTMLController controller) {
 		this.socket = socket;
-		this.content = content;
+		this.controller = controller;
 	}
 	
 	public void run() {
@@ -34,7 +34,7 @@ public class ServiceThread implements Runnable {
 				switch(request.getMethod()) {
 					case GET:
 						// De momento solo pueden ser get
-							String contenidoResultado = content.getContent(request.getResourceParameters().get("uuid"));
+							String contenidoResultado = controller.getContent().get(request.getResourceParameters().get("uuid"));
 							if(contenidoResultado!=null){
 								response.setContent(contenidoResultado);
 							}else {
@@ -42,15 +42,13 @@ public class ServiceThread implements Runnable {
 							}
 						break;
 				default:
+					System.out.println("Metodo no implementado de momento");
 					break;
 						
 				}
 				
-				
-				
 				// Respuesta
 				response.setStatus(HTTPResponseStatus.S200);
-				output.write(response.toString().getBytes());
 				output.close();
 			}catch(IOException e) {
 				//TODO: Handle exception
