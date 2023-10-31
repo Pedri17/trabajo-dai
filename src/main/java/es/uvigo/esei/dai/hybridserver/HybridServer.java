@@ -34,8 +34,8 @@ public class HybridServer implements AutoCloseable {
   private Thread serverThread;
   private boolean stop;
   
-  private ExecutorService threadPool;
   private HTMLController controller;
+  private ExecutorService threadPool;
 
   public HybridServer() {
     controller = new HTMLController(new HTMLDaoMap());
@@ -66,14 +66,13 @@ public class HybridServer implements AutoCloseable {
       public void run() {
     	  
         try (final ServerSocket serverSocket = new ServerSocket(SERVICE_PORT)) {
-          ExecutorService executor = Executors.newFixedThreadPool(10);
-          threadPool = executor;
+          threadPool = Executors.newFixedThreadPool(10);
         	
         	while (true) {
         		Socket socket = serverSocket.accept();
         		if (stop) 
               break;
-        		executor.execute(new ServiceThread(socket, controller));
+        		threadPool.execute(new ServiceThread(socket, controller));
         	}
 
         } catch (IOException e) {
@@ -106,10 +105,12 @@ public class HybridServer implements AutoCloseable {
 
     threadPool.shutdownNow();
 
-    try {
-      threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+  try {
+    threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+  } catch (InterruptedException e) {
+    e.printStackTrace();
   }
+
+  }
+
 }

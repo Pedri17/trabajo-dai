@@ -48,10 +48,9 @@ public class ServiceThread implements Runnable {
 									if (controller.contains(requestUuid)){
 										String uuidContent = controller.getContent(requestUuid);
 										
-										System.out.println("UUID Known");
-										response.putParameter("Conten-Type", "text/html");
-										response.setContent(uuidContent);
 										response.setStatus(HTTPResponseStatus.S200);
+										response.putParameter("Content-Type", "text/html");
+										response.setContent(uuidContent);
 									}else{
 										// Unknown uuid
 										response.setStatus(HTTPResponseStatus.S404);
@@ -63,8 +62,9 @@ public class ServiceThread implements Runnable {
 										res.append(uuid);
 									}
 
-									response.setContent(res.toString());
 									response.setStatus(HTTPResponseStatus.S200);
+									response.putParameter("Content-Type", "text/html");
+									response.setContent(res.toString());
 								}
 							}else{
 								response.setStatus(HTTPResponseStatus.S400);
@@ -76,8 +76,12 @@ public class ServiceThread implements Runnable {
 						case POST:
 						
 						if (request.getResourceParameters().containsKey("html")){
-							controller.getData().create(request.getResourceParameters().get("html"));
+							String newUuid = controller.getData().create(request.getResourceParameters().get("html"));
+							StringBuilder aux = new StringBuilder();
+							aux.append("<a href=\"html?uuid=").append(newUuid).append("\">").append(newUuid).append("</a>");
+
 							response.setStatus(HTTPResponseStatus.S200);
+							response.setContent(aux.toString());
 						}else{
 							response.setStatus(HTTPResponseStatus.S400);
 							response.setContent("Bad Request");
