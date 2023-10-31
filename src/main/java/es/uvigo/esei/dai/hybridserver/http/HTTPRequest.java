@@ -37,112 +37,30 @@ public class HTTPRequest {
     private String content;
     private int contentLength;
 
-    // Constructor to initialize an HTTPRequest object
     public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
-        // Initialize the BufferedReader for reading HTTP requests
+        
         this.reader = new BufferedReader(reader);
+        this.resourceParameters = new LinkedHashMap<String, String>();
+        this.resourceHeaderParameters = new LinkedHashMap<String, String>();
 
-        // Call the initValues method to populate the object's values
-        initValues();
-    }
-
-    // Getter for the HTTP request method
-    public HTTPRequestMethod getMethod() {
-        return this.method;
-    }
-
-    // Getter for the resource chain (URI)
-    public String getResourceChain() {
-        return this.resourceChain;
-    }
-
-    // Getter for the resource path (parts of the URI)
-    public String[] getResourcePath() {
-        return this.resourcePath;
-    }
-
-    // Getter for the resource name (part of the URI)
-    public String getResourceName() {
-        return this.resourceName;
-    }
-    
- // Getter for the parameters parsed from the HTTP Request
-    public Map<String, String> getResourceParameters() {
-
-		return this.resourceParameters;
-	}
-
-
-    // Getter for the HTTP version
-    public String getHttpVersion() {
-        return this.version;
-    }
-
-    // Getter for the HTTP request headers (parameters)
-    public Map<String, String> getHeaderParameters() {
-        return this.resourceHeaderParameters;
-    }
-
-    // Getter for the content of the HTTP request body
-    public String getContent() {
-        return this.content;
-    }
-
-    // Getter for the length of the content in the HTTP request body
-    public int getContentLength() {
-        return this.contentLength;
-    }
-
-    // Override the toString method to provide a string representation of the HTTP request
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(this.getMethod().name()).append(' ')
-                .append(this.getResourceChain()).append(' ').append(this.getHttpVersion()).append("\r\n");
-
-        // Append the HTTP request headers to the string
-        for (Map.Entry<String, String> param : this.getHeaderParameters().entrySet()) {
-            sb.append(param.getKey()).append(": ").append(param.getValue()).append("\r\n");
-        }
-
-        // Append the content of the HTTP request body, if it exists
-        if (this.getContentLength() > 0) {
-            sb.append("\r\n").append(this.getContent());
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Retrieves information from an HTTP request.
-     *
-     * @throws IOException
-     * @throws HTTPParseException if the HTTP request is incorrect.
-     */
-    private void initValues() throws IOException, HTTPParseException {
-        // Split the first line of the request to obtain the method, resource chain, and version
         String[] firstLine = this.reader.readLine().split(" ");
 
         if (firstLine.length != 3) {
             throw new HTTPParseException("Invalid HTTPRequest first line.");
         }
 
-        // Set the HTTP request method, resource chain (URI), and version
         this.method = HTTPRequestMethod.valueOf(firstLine[0]);
         this.resourceChain = firstLine[1];
         this.version = firstLine[2];
 
-        // Initialize the HTTP request header parameters as a LinkedHashMap to preserve order
-        this.resourceHeaderParameters = new LinkedHashMap<String, String>();
         String line;
 
-        // Read lines containing HTTP request header parameters until an empty line is encountered
         while ((line = this.reader.readLine()) != null && !line.matches("")) {
-            // Check that header parameters are in the correct format (key: value)
+
             if (line.matches(".*:.*")) {
                 String[] headerParameters = line.split(": ");
                 this.resourceHeaderParameters.put(headerParameters[0], headerParameters[1]);
 
-                // If "Content-Length" is found, set the content length
                 if (headerParameters[0].equals("Content-Length")) {
                     this.contentLength = Integer.parseInt(headerParameters[1]);
                 }
@@ -154,9 +72,7 @@ public class HTTPRequest {
 
         String[] parameters = null;
 
-        // Check if query parameters are part of the requested resource chain (URI)
         if (this.resourceChain.matches(".+\\?.+")) {
-            // Split the resource chain into resource name and query parameters
             String[] splitResource = this.resourceChain.split("\\?");
             this.resourceName = splitResource[0].substring(1);
             parameters = splitResource[1].split("\\&");
@@ -164,7 +80,6 @@ public class HTTPRequest {
         } else {
             this.resourceName = this.resourceChain.substring(1);
 
-            // Check if there is content in the HTTP request body
             if (this.contentLength > 0) {
                 char[] contentArray = new char[this.contentLength];
                 if (this.reader.read(contentArray) != contentArray.length) {
@@ -173,7 +88,6 @@ public class HTTPRequest {
 
                 this.content = new String(contentArray);
 
-                // Decode the content if it has a specific content type
                 String type = this.resourceHeaderParameters.get("Content-Type");
                 if (type != null && type.startsWith("application/x-www-form-urlencoded")) {
                     this.content = URLDecoder.decode(this.content, "UTF-8");
@@ -182,10 +96,6 @@ public class HTTPRequest {
             }
         }
 
-        // Initialize the HTTP request query parameters as a LinkedHashMap
-        this.resourceParameters = new LinkedHashMap<String, String>();
-
-        // Populate the query parameters map
         if (parameters != null) {
             String[] splitParameters;
             for (int i = 0; i < parameters.length; i++) {
@@ -194,11 +104,63 @@ public class HTTPRequest {
             }
         }
 
-        // Initialize the resource path with a length of 0 in case there is no path
         resourcePath = new String[0];
         if (!resourceName.equals("")) {
-            // Split the resource name into parts for the resource path
             resourcePath = this.resourceName.split("\\/");
         }
     }
+
+    public HTTPRequestMethod getMethod() {
+        return this.method;
+    }
+
+    public String getResourceChain() {
+        return this.resourceChain;
+    }
+
+    public String[] getResourcePath() {
+        return this.resourcePath;
+    }
+
+    public String getResourceName() {
+        return this.resourceName;
+    }
+    
+    public Map<String, String> getResourceParameters() {
+		return this.resourceParameters;
+	}
+
+
+    public String getHttpVersion() {
+        return this.version;
+    }
+
+    public Map<String, String> getHeaderParameters() {
+        return this.resourceHeaderParameters;
+    }
+
+    public String getContent() {
+        return this.content;
+    }
+
+    public int getContentLength() {
+        return this.contentLength;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder(this.getMethod().name()).append(' ')
+                .append(this.getResourceChain()).append(' ').append(this.getHttpVersion()).append("\r\n");
+
+        for (Map.Entry<String, String> param : this.getHeaderParameters().entrySet()) {
+            sb.append(param.getKey()).append(": ").append(param.getValue()).append("\r\n");
+        }
+
+        if (this.getContentLength() > 0) {
+            sb.append("\r\n").append(this.getContent());
+        }
+
+        return sb.toString();
+    }
+        
 }

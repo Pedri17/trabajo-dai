@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 public class HTMLDaoMap implements HTMLDao {
 	Map<String, String> uuidContentMap;
@@ -25,7 +26,9 @@ public class HTMLDaoMap implements HTMLDao {
 	}
 	
 	public String create(String content) {
-		return null;
+		UUID uuid = UUID.randomUUID();
+		uuidContentMap.put(uuid.toString(), content);
+		return uuid.toString();
 	}
 	
 	public void delete(String uuid) {

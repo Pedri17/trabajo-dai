@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.lang.Runnable;
 
 public class HybridServer implements AutoCloseable {
@@ -37,16 +38,21 @@ public class HybridServer implements AutoCloseable {
   private HTMLController controller;
 
   public HybridServer() {
-    // TODO Inicializar con los parámetros por defecto
+    controller = new HTMLController(new HTMLDaoMap());
+    this.stop = false;
+    System.out.println("Server launched without any parameters.");
   }
 
   public HybridServer(Map<String, String> pages) {
-    // TODO Inicializar con la base de datos en memoria conteniendo "pages"
 	  controller = new HTMLController(new HTMLDaoMap(pages));
+    this.stop = false;
+    System.out.println("Server lauched with pages parameter.");
   }
 
   public HybridServer(Properties properties) {
-    // TODO Inicializar con los parámetros recibidos
+    controller = new HTMLController(new HTMLDaoMap());
+    this.stop = false;
+    System.out.println("Server lauched with properities parameter (NOT IMPLEMENTED).");
   }
 
   public int getPort() {
@@ -55,18 +61,21 @@ public class HybridServer implements AutoCloseable {
 
   public void start() {
     this.serverThread = new Thread() {
+
       @Override
       public void run() {
     	  
         try (final ServerSocket serverSocket = new ServerSocket(SERVICE_PORT)) {
-        	threadPool = Executors.newFixedThreadPool(10);
+          ExecutorService executor = Executors.newFixedThreadPool(10);
+          threadPool = executor;
         	
         	while (true) {
         		Socket socket = serverSocket.accept();
-        		if (stop) break;
-        		ServiceThread st = new ServiceThread(socket, controller);
-        		threadPool.execute(st);
+        		if (stop) 
+              break;
+        		executor.execute(new ServiceThread(socket, controller));
         	}
+
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -94,5 +103,13 @@ public class HybridServer implements AutoCloseable {
     }
 
     this.serverThread = null;
+
+    threadPool.shutdownNow();
+
+    try {
+      threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }
