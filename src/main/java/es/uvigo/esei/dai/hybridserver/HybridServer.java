@@ -30,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.lang.Runnable;
 
 public class HybridServer implements AutoCloseable {
-  private static final int SERVICE_PORT = 8888;
+  private int SERVICE_PORT = 8888;
+  private int MAX_CLIENTS = 10;
   private Thread serverThread;
   private boolean stop;
   
@@ -50,9 +51,17 @@ public class HybridServer implements AutoCloseable {
   }
 
   public HybridServer(Properties properties) {
-    controller = new HTMLController(new HTMLDaoMap());
     this.stop = false;
     System.out.println("Server lauched with properities parameter (NOT IMPLEMENTED).");
+
+    SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
+    MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+
+    String USER = properties.getProperty("db.user");
+    String PASSWORD = properties.getProperty("db.password");
+    String URL = properties.getProperty("db.url");
+
+    controller = new HTMLController(new HTMLDaoDB(USER, PASSWORD, URL));
   }
 
   public int getPort() {
@@ -66,7 +75,7 @@ public class HybridServer implements AutoCloseable {
       public void run() {
     	  
         try (final ServerSocket serverSocket = new ServerSocket(SERVICE_PORT)) {
-          threadPool = Executors.newFixedThreadPool(10);
+          threadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
         	
         	while (true) {
         		Socket socket = serverSocket.accept();
@@ -105,11 +114,11 @@ public class HybridServer implements AutoCloseable {
 
     threadPool.shutdownNow();
 
-  try {
-    threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-  } catch (InterruptedException e) {
-    e.printStackTrace();
-  }
+    try {
+      threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
   }
 

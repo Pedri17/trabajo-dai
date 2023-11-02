@@ -17,9 +17,18 @@
  */
 package es.uvigo.esei.dai.hybridserver;
 
+import java.io.File;
+
 public class Launcher {
   public static void main(String[] args) {
-    HybridServer server = new HybridServer();
-    server.start();
+    if(args.length == 0){
+      new HybridServer().start();
+    }else if(args.length==1){
+      File configurationFile = new File(args[0]);
+      ConfigurationController configController = new ConfigurationController(configurationFile);
+      new HybridServer(configController.getProperties()).start();
+    }else{
+      System.err.println("Error, has tratado de iniciar la aplicación servidor con más de un parámetro de configuración.");
+    }
   }
 }
