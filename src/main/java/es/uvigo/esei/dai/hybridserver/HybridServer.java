@@ -39,14 +39,26 @@ public class HybridServer implements AutoCloseable {
   private ExecutorService threadPool;
 
   public HybridServer() {
-    controller = new HTMLController(new HTMLDaoMap());
     this.stop = false;
+
+    controller = new HTMLController(new HTMLDaoMap());
+    Properties properties = new ConfigurationController().getProperties();
+
+    SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
+    MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+    
     System.out.println("Server launched without any parameters.");
   }
 
   public HybridServer(Map<String, String> pages) {
-	  controller = new HTMLController(new HTMLDaoMap(pages));
     this.stop = false;
+    controller = new HTMLController(new HTMLDaoMap(pages));
+
+    Properties properties = new ConfigurationController().getProperties();
+
+    SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
+    MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+
     System.out.println("Server lauched with pages parameter.");
   }
 

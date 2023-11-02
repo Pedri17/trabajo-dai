@@ -4,13 +4,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.UUID;
 
 import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
-import es.uvigo.esei.dai.hybridserver.http.HTTPParseException;
 import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponseStatus;
@@ -66,6 +63,17 @@ public class ServiceThread implements Runnable {
 									response.putParameter("Content-Type", "text/html");
 									response.setContent(res.toString());
 								}
+							} else if (request.getResourceChain().equals("/")) {
+								StringBuilder aux = new StringBuilder();
+								aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
+									.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
+									.append("</head>").append("<body>").append("<h1>Hybrid Server</h1>")
+									.append("Autores: Pedro Jalda Fonseca, Raúl Civeira Corral.")
+									.append("</body>").append("</html>");
+													
+								response.setStatus(HTTPResponseStatus.S200);
+								response.putParameter("Content-Type", "text/html");
+								response.setContent(aux.toString());
 							}else{
 								response.setStatus(HTTPResponseStatus.S400);
 								response.setContent("Bad Request");
