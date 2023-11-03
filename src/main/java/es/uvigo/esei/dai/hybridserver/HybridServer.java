@@ -41,11 +41,16 @@ public class HybridServer implements AutoCloseable {
   public HybridServer() {
     this.stop = false;
 
-    controller = new HTMLController(new HTMLDaoMap());
     Properties properties = new ConfigurationController().getProperties();
 
     SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
     MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+
+    String USER = properties.getProperty("db.user");
+    String PASSWORD = properties.getProperty("db.password");
+    String URL = properties.getProperty("db.url");
+
+    controller = new HTMLController(new HTMLDaoDB(USER, PASSWORD, URL));
     
     System.out.println("Server launched without any parameters.");
   }
