@@ -69,7 +69,7 @@ public class HybridServer implements AutoCloseable {
 
   public HybridServer(Properties properties) {
     this.stop = false;
-    System.out.println("Server lauched with properities parameter (NOT IMPLEMENTED).");
+    System.out.println("Server lauched with properities parameter.");
 
     SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
     MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));

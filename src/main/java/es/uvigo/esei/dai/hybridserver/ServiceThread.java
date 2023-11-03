@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.URLDecoder;
 
 import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
 import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
@@ -34,6 +35,7 @@ public class ServiceThread implements Runnable {
 					System.out.println("-----REQUEST-------");
 					System.out.println(request.toString());
 					System.out.println("-------------------");
+
 					switch(request.getMethod()) {
 						case GET:
 
