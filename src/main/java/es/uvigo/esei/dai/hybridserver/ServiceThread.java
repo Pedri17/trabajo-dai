@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.net.URLDecoder;
 
 import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
 import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
@@ -43,8 +42,8 @@ public class ServiceThread implements Runnable {
 								String requestUuid = request.getResourceParameters().get("uuid");
 								// Request message has a uuid field
 								if (requestUuid != null){
-									// Is a known uuid
 									if (controller.contains(requestUuid)){
+										// Known uuid
 										String uuidContent = controller.getContent(requestUuid);
 										
 										response.setStatus(HTTPResponseStatus.S200);
@@ -66,6 +65,7 @@ public class ServiceThread implements Runnable {
 									response.setContent(res.toString());
 								}
 							} else if (request.getResourceChain().equals("/")) {
+								// Wellcome page
 								StringBuilder aux = new StringBuilder();
 								aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
 									.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
@@ -85,36 +85,38 @@ public class ServiceThread implements Runnable {
 					
 						case POST:
 						
-						if (request.getResourceParameters().containsKey("html")){
-							String newUuid = controller.getData().create(request.getResourceParameters().get("html"));
-							StringBuilder aux = new StringBuilder();
-							aux.append("<a href=\"html?uuid=").append(newUuid).append("\">").append(newUuid).append("</a>");
+							if (request.getResourceParameters().containsKey("html")){
+								String newUuid = controller.getData().create(request.getResourceParameters().get("html"));
+								StringBuilder aux = new StringBuilder();
+								aux.append("<a href=\"html?uuid=").append(newUuid).append("\">").append(newUuid).append("</a>");
 
-							response.setStatus(HTTPResponseStatus.S200);
-							response.setContent(aux.toString());
-						}else{
-							response.setStatus(HTTPResponseStatus.S400);
-							response.setContent("Bad Request");
-						}
+								response.setStatus(HTTPResponseStatus.S200);
+								response.setContent(aux.toString());
+							}else{
+								response.setStatus(HTTPResponseStatus.S400);
+								response.setContent("Bad Request");
+							}
 
-						break;
+							break;
 
 						case DELETE:
 						
-						// UUID is on the data structure
-						String uuid = request.getResourceParameters().get("uuid");
-						if(controller.contains(uuid)){
-							controller.getData().delete(uuid);
-							response.setStatus(HTTPResponseStatus.S200);
-						}else{
-							response.setStatus(HTTPResponseStatus.S404);
-							response.setContent("Not Found");
-						}
+							// UUID is on the data structure
+							String uuid = request.getResourceParameters().get("uuid");
+							if(controller.contains(uuid)){
+								controller.getData().delete(uuid);
+								response.setStatus(HTTPResponseStatus.S200);
+							}else{
+								// UUID not found
+								response.setStatus(HTTPResponseStatus.S404);
+								response.setContent("Not Found");
+							}
 
-						break;
+							break;
 
 						default:
-							System.out.println("Metodo no implementado de momento");
+							response.setStatus(HTTPResponseStatus.S400);
+							response.setContent("Method not implemented");
 							break;
 					}
 					

@@ -17,9 +17,7 @@
  */
 package es.uvigo.esei.dai.hybridserver;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
@@ -27,7 +25,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.lang.Runnable;
 
 public class HybridServer implements AutoCloseable {
   private int SERVICE_PORT = 8888;
@@ -69,7 +66,6 @@ public class HybridServer implements AutoCloseable {
 
   public HybridServer(Properties properties) {
     this.stop = false;
-    System.out.println("Server lauched with properities parameter.");
 
     SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
     MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
@@ -79,6 +75,7 @@ public class HybridServer implements AutoCloseable {
     String URL = properties.getProperty("db.url");
 
     controller = new HTMLController(new HTMLDaoDB(USER, PASSWORD, URL));
+    System.out.println("Server lauched with properities parameter.");
   }
 
   public int getPort() {

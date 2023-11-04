@@ -36,7 +36,6 @@ public class HTMLDaoDB implements HTMLDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            
         }
 
         return null;
@@ -56,7 +55,6 @@ public class HTMLDaoDB implements HTMLDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            
         }
         return htmlList;
     }
@@ -71,7 +69,6 @@ public class HTMLDaoDB implements HTMLDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            
         }
     }
 
@@ -89,7 +86,6 @@ public class HTMLDaoDB implements HTMLDao {
             return uuid;
         } catch (SQLException e) {
             e.printStackTrace();
-            
         }
         return null;
     }
@@ -116,7 +112,6 @@ public class HTMLDaoDB implements HTMLDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-          
         }
         return false;
     }
