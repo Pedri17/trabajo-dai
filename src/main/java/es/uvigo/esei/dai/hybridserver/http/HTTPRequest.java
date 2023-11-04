@@ -25,7 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class HTTPRequest {
-    // Declare instance variables
+
     private BufferedReader reader;
     private HTTPRequestMethod method;
     private String resourceChain;
@@ -43,71 +43,62 @@ public class HTTPRequest {
         this.resourceParameters = new LinkedHashMap<String, String>();
         this.resourceHeaderParameters = new LinkedHashMap<String, String>();
 
-        String[] firstLine = this.reader.readLine().split(" ");
+        String[] splitFirstLine = this.reader.readLine().split(" ");
 
-        if (firstLine.length != 3) {
-            throw new HTTPParseException("Invalid HTTPRequest first line.");
-        }
+        if (splitFirstLine.length != 3) throw new HTTPParseException("Invalid first line on HTTPRequest.");
 
-        this.method = HTTPRequestMethod.valueOf(firstLine[0]);
-        this.resourceChain = firstLine[1];
-        this.version = firstLine[2];
+        this.method = HTTPRequestMethod.valueOf(splitFirstLine[0]);
+        this.resourceChain = splitFirstLine[1];
+        this.version = splitFirstLine[2];
 
         String line;
 
         while ((line = this.reader.readLine()) != null && !line.matches("")) {
 
             if (line.matches(".*:.*")) {
-                String[] headerParameters = line.split(": ");
-                this.resourceHeaderParameters.put(headerParameters[0], headerParameters[1]);
+                String[] headerParams = line.split(": ");
+                this.resourceHeaderParameters.put(headerParams[0], headerParams[1]);
 
-                if (headerParameters[0].equals("Content-Length")) {
-                    this.contentLength = Integer.parseInt(headerParameters[1]);
-                }
+                if (headerParams[0].equals("Content-Length")) this.contentLength = Integer.parseInt(headerParams[1]);
 
             } else {
                 throw new HTTPParseException("Invalid HTTPRequest.");
             }
         }
 
-        String[] parameters = null;
+        String[] params = null;
 
         if (this.resourceChain.matches(".+\\?.+")) {
-            String[] splitResource = this.resourceChain.split("\\?");
-            this.resourceName = splitResource[0].substring(1);
-            parameters = splitResource[1].split("\\&");
+            
+            String[] resources = this.resourceChain.split("\\?");
+            this.resourceName = resources[0].substring(1);
+            params = resources[1].split("\\&");
 
         } else {
             this.resourceName = this.resourceChain.substring(1);
 
             if (this.contentLength > 0) {
                 char[] contentArray = new char[this.contentLength];
-                if (this.reader.read(contentArray) != contentArray.length) {
-                    throw new HTTPParseException("Invalid content length.");
-                }
+                if (this.reader.read(contentArray) != contentArray.length) throw new HTTPParseException("Invalid content length.");
 
                 this.content = new String(contentArray);
 
                 String type = this.resourceHeaderParameters.get("Content-Type");
-                if (type != null && type.startsWith("application/x-www-form-urlencoded")) {
-                    this.content = URLDecoder.decode(this.content, "UTF-8");
-                }
-                parameters = this.content.split("\\&");
+                if (type != null && type.startsWith("application/x-www-form-urlencoded")) this.content = URLDecoder.decode(this.content, "UTF-8");
+                params = this.content.split("\\&");
             }
         }
 
-        if (parameters != null) {
-            String[] splitParameters;
-            for (int i = 0; i < parameters.length; i++) {
-                splitParameters = parameters[i].split("=");
-                this.resourceParameters.put(splitParameters[0], splitParameters[1]);
+        if (params != null) {
+            String[] splitParams;
+            for (int i = 0; i < params.length; i++) {
+                splitParams = params[i].split("=");
+                this.resourceParameters.put(splitParams[0], splitParams[1]);
             }
         }
 
-        resourcePath = new String[0];
-        if (!resourceName.equals("")) {
-            resourcePath = this.resourceName.split("\\/");
-        }
+        this.resourcePath = new String[0];
+        if (!resourceName.equals("")) this.resourcePath = this.resourceName.split("\\/");
     }
 
     public HTTPRequestMethod getMethod() {
@@ -129,7 +120,6 @@ public class HTTPRequest {
     public Map<String, String> getResourceParameters() {
 		return this.resourceParameters;
 	}
-
 
     public String getHttpVersion() {
         return this.version;
