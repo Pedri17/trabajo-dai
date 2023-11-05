@@ -9,7 +9,11 @@
 	<fileSets>
 		<fileSet>
 			<directory>${project.build.sourceDirectory}</directory>
-			<outputDirectory>src</outputDirectory>
+			<outputDirectory>src/main/java</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/resources</directory>
+			<outputDirectory>src/main/resources</outputDirectory>
 		</fileSet>
 		<fileSet>
 			<directory>${project.build.directory}/site</directory>
@@ -19,6 +23,10 @@
 	<files>
 		<file>
 			<source>pom.xml</source>
+			<outputDirectory>/</outputDirectory>
+		</file>
+		<file>
+			<source>ENTREGA1.md</source>
 			<outputDirectory>/</outputDirectory>
 		</file>
 	</files>
