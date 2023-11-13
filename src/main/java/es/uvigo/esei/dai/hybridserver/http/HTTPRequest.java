@@ -20,137 +20,149 @@ package es.uvigo.esei.dai.hybridserver.http;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class HTTPRequest {
+	
+	HTTPRequestMethod method;
+	String resourceChain;
+	String [] resourcePath;
+	String resourceName;
+	String httpVersion;
+	Map<String,String> headerParameters;
+	Map<String, String> resourceParameters;
+	String content;
+	int contentLength = 0;
+	
+  public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
+	  BufferedReader bReader = new BufferedReader(reader);
+	  String [] lineWords =  bReader.readLine().split(" ");
+	  this.headerParameters = new LinkedHashMap<String, String>();
+	  this.resourceParameters = new LinkedHashMap<String, String>();
+	  
+	  if(lineWords==null) throw new HTTPParseException();
+	  
+	//Get HTTPRequest Method
+	  switch(lineWords[0]) {
+	  	case "GET":
+	  		this.method = HTTPRequestMethod.GET;
+	  		break;
+	  	case "CONNECT":
+	  		this.method = HTTPRequestMethod.CONNECT;
+	  		break;
+	  	case "DELETE":
+	  		this.method = HTTPRequestMethod.DELETE;
+	  		break;
+	  	case "HEAD":
+	  		this.method = HTTPRequestMethod.HEAD;
+	  		break;
+	  	case "OPTIONS":
+	  		this.method = HTTPRequestMethod.OPTIONS;
+	  		break;
+	  	case "POST":
+	  		this.method = HTTPRequestMethod.POST;
+	  		break;
+	  	case "PUT":
+	  		this.method = HTTPRequestMethod.PUT;
+	  		break;
+	  	case "TRACE":
+	  		this.method = HTTPRequestMethod.TRACE;
+	  		break;
+	  	default: 
+	  		System.err.println("HTTP Request Method not expected.");
+	  		throw new HTTPParseException();
+	  }
+	  
+	  this.resourceChain = lineWords[1];
+	  if(lineWords[1].length()>1) {
+		  this.resourcePath = new String [2];
+		  this.resourcePath[0] = lineWords[1].substring(1).split("/")[0];
+		  this.resourcePath[1] = lineWords[1].substring(1).split("/")[1].split("\\?")[0];
+	  }else {
+		  this.resourcePath = new String[0];
+	  }
+	  this.resourceName = lineWords[1].substring(1).split("\\?")[0];
+	  this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
+	  
+	  lineWords =  bReader.readLine().split(" ");
+	  while(lineWords[0].length() > 0) {
+		  String header = lineWords[0].substring(0,lineWords[0].length()-1);
+		  String content = lineWords[1];
+		  this.headerParameters.put(header, content);
+		  lineWords =  bReader.readLine().split(" ");
+	  }
+	  String line = bReader.readLine();
+	  String message = "";
+	  String [] messages;
+	  
+	  while(line != null && !line.isEmpty()) {
+		  message += line;
+		  messages = line.split("&");
+		  for(int i=0; i<messages.length; i++) {
+			  this.resourceParameters.put(messages[i].split("=")[0], messages[i].split("=")[1]);
+		  }
+		  line = bReader.readLine();
+	  }
+	  if(!message.isEmpty()) {
+		  this.content = message;
+		  this.contentLength = message.length();
+	  }
+	  
 
-    private BufferedReader reader;
-    private HTTPRequestMethod method;
-    private String resourceChain;
-    private String[] resourcePath;
-    private Map<String, String> resourceParameters;
-    private Map<String, String> resourceHeaderParameters;
-    private String resourceName;
-    private String version;
-    private String content;
-    private int contentLength;
+  }
 
-    public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
-        
-        this.reader = new BufferedReader(reader);
-        this.resourceParameters = new LinkedHashMap<String, String>();
-        this.resourceHeaderParameters = new LinkedHashMap<String, String>();
+  public HTTPRequestMethod getMethod() {
+    return this.method;
+  }
 
-        String[] splitFirstLine = this.reader.readLine().split(" ");
+  public String getResourceChain() {
+    return this.resourceChain;
+  }
 
-        if (splitFirstLine.length != 3) throw new HTTPParseException("Invalid first line on HTTPRequest.");
+  public String[] getResourcePath() {
+    return this.resourcePath;
+  }
 
-        this.method = HTTPRequestMethod.valueOf(splitFirstLine[0]);
-        this.resourceChain = splitFirstLine[1];
-        this.version = splitFirstLine[2];
+  public String getResourceName() {
+    return this.resourceName;
+  }
 
-        String line;
+  public Map<String, String> getResourceParameters() {
+    return this.resourceParameters;
+  }
 
-        while ((line = this.reader.readLine()) != null && !line.matches("")) {
+  public String getHttpVersion() {
+    return this.httpVersion;
+  }
 
-            if (line.matches(".*:.*")) {
-                String[] headerParams = line.split(": ");
-                this.resourceHeaderParameters.put(headerParams[0], headerParams[1]);
+  public Map<String, String> getHeaderParameters() {
+    return this.headerParameters;
+  }
 
-                if (headerParams[0].equals("Content-Length")) this.contentLength = Integer.parseInt(headerParams[1]);
+  public String getContent() {
+    return this.content;
+  }
 
-            } else {
-                throw new HTTPParseException("Invalid HTTPRequest.");
-            }
-        }
+  public int getContentLength() {
+    return this.contentLength;
+  }
 
-        String[] params = null;
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder().append(this.getMethod().name()).append(' ')
+      .append(this.getResourceChain()).append(' ').append(this.getHttpVersion()).append("\r\n");
 
-        if (this.resourceChain.matches(".+\\?.+")) {
-            
-            String[] resources = this.resourceChain.split("\\?");
-            this.resourceName = resources[0].substring(1);
-            params = resources[1].split("\\&");
-
-        } else {
-            this.resourceName = this.resourceChain.substring(1);
-
-            if (this.contentLength > 0) {
-                char[] contentArray = new char[this.contentLength];
-                if (this.reader.read(contentArray) != contentArray.length) throw new HTTPParseException("Invalid content length.");
-
-                this.content = new String(contentArray);
-
-                String type = this.resourceHeaderParameters.get("Content-Type");
-                if (type != null && type.startsWith("application/x-www-form-urlencoded")) this.content = URLDecoder.decode(this.content, "UTF-8");
-                params = this.content.split("\\&");
-            }
-        }
-
-        if (params != null) {
-            String[] splitParams;
-            for (int i = 0; i < params.length; i++) {
-                splitParams = params[i].split("=");
-                this.resourceParameters.put(splitParams[0], splitParams[1]);
-            }
-        }
-
-        this.resourcePath = new String[0];
-        if (!resourceName.equals("")) this.resourcePath = this.resourceName.split("\\/");
+    for (Map.Entry<String, String> param : this.getHeaderParameters().entrySet()) {
+      sb.append(param.getKey()).append(": ").append(param.getValue()).append("\r\n");
     }
 
-    public HTTPRequestMethod getMethod() {
-        return this.method;
+    if (this.getContentLength() > 0) {
+      sb.append("\r\n").append(this.getContent());
     }
 
-    public String getResourceChain() {
-        return this.resourceChain;
-    }
-
-    public String[] getResourcePath() {
-        return this.resourcePath;
-    }
-
-    public String getResourceName() {
-        return this.resourceName;
-    }
-    
-    public Map<String, String> getResourceParameters() {
-		return this.resourceParameters;
-	}
-
-    public String getHttpVersion() {
-        return this.version;
-    }
-
-    public Map<String, String> getHeaderParameters() {
-        return this.resourceHeaderParameters;
-    }
-
-    public String getContent() {
-        return this.content;
-    }
-
-    public int getContentLength() {
-        return this.contentLength;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(this.getMethod().name()).append(' ')
-                .append(this.getResourceChain()).append(' ').append(this.getHttpVersion()).append("\r\n");
-
-        for (Map.Entry<String, String> param : this.getHeaderParameters().entrySet()) {
-            sb.append(param.getKey()).append(": ").append(param.getValue()).append("\r\n");
-        }
-
-        if (this.getContentLength() > 0) {
-            sb.append("\r\n").append(this.getContent());
-        }
-
-        return sb.toString();
-    }
-        
+    return sb.toString();
+  }
 }
