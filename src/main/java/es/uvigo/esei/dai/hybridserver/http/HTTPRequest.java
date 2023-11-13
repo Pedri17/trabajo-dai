@@ -38,80 +38,97 @@ public class HTTPRequest {
 	int contentLength = 0;
 	
   public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
-	  BufferedReader bReader = new BufferedReader(reader);
-	  String [] lineWords =  bReader.readLine().split(" ");
-	  this.headerParameters = new LinkedHashMap<String, String>();
-	  this.resourceParameters = new LinkedHashMap<String, String>();
-	  
-	  if(lineWords==null) throw new HTTPParseException();
-	  
-	//Get HTTPRequest Method
-	  switch(lineWords[0]) {
-	  	case "GET":
-	  		this.method = HTTPRequestMethod.GET;
-	  		break;
-	  	case "CONNECT":
-	  		this.method = HTTPRequestMethod.CONNECT;
-	  		break;
-	  	case "DELETE":
-	  		this.method = HTTPRequestMethod.DELETE;
-	  		break;
-	  	case "HEAD":
-	  		this.method = HTTPRequestMethod.HEAD;
-	  		break;
-	  	case "OPTIONS":
-	  		this.method = HTTPRequestMethod.OPTIONS;
-	  		break;
-	  	case "POST":
-	  		this.method = HTTPRequestMethod.POST;
-	  		break;
-	  	case "PUT":
-	  		this.method = HTTPRequestMethod.PUT;
-	  		break;
-	  	case "TRACE":
-	  		this.method = HTTPRequestMethod.TRACE;
-	  		break;
-	  	default: 
-	  		System.err.println("HTTP Request Method not expected.");
-	  		throw new HTTPParseException();
-	  }
-	  
-	  this.resourceChain = lineWords[1];
-	  if(lineWords[1].length()>1) {
-		  this.resourcePath = new String [2];
-		  this.resourcePath[0] = lineWords[1].substring(1).split("/")[0];
-		  this.resourcePath[1] = lineWords[1].substring(1).split("/")[1].split("\\?")[0];
-	  }else {
-		  this.resourcePath = new String[0];
-	  }
-	  this.resourceName = lineWords[1].substring(1).split("\\?")[0];
-	  this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
-	  
-	  lineWords =  bReader.readLine().split(" ");
-	  while(lineWords[0].length() > 0) {
-		  String header = lineWords[0].substring(0,lineWords[0].length()-1);
-		  String content = lineWords[1];
-		  this.headerParameters.put(header, content);
-		  lineWords =  bReader.readLine().split(" ");
-	  }
-	  String line = bReader.readLine();
-	  String message = "";
-	  String [] messages;
-	  
-	  while(line != null && !line.isEmpty()) {
-		  message += line;
-		  messages = line.split("&");
-		  for(int i=0; i<messages.length; i++) {
-			  this.resourceParameters.put(messages[i].split("=")[0], messages[i].split("=")[1]);
-		  }
-		  line = bReader.readLine();
-	  }
-	  if(!message.isEmpty()) {
-		  this.content = message;
-		  this.contentLength = message.length();
-	  }
-	  
+    try(BufferedReader bReader = new BufferedReader(reader)){
+        
+        this.headerParameters = new LinkedHashMap<String, String>();
+        this.resourceParameters = new LinkedHashMap<String, String>();
 
+        // First line (Method, location, version)
+        String [] lineWords =  bReader.readLine().split(" ");
+        
+        if(lineWords==null || lineWords.length<3) throw new HTTPParseException();
+        
+        //Get HTTPRequest Method
+        switch(lineWords[0]) {
+        case "GET":
+            this.method = HTTPRequestMethod.GET;
+            break;
+        case "CONNECT":
+            this.method = HTTPRequestMethod.CONNECT;
+            break;
+        case "DELETE":
+            this.method = HTTPRequestMethod.DELETE;
+            break;
+        case "HEAD":
+            this.method = HTTPRequestMethod.HEAD;
+            break;
+        case "OPTIONS":
+            this.method = HTTPRequestMethod.OPTIONS;
+            break;
+        case "POST":
+            this.method = HTTPRequestMethod.POST;
+            break;
+        case "PUT":
+            this.method = HTTPRequestMethod.PUT;
+            break;
+        case "TRACE":
+            this.method = HTTPRequestMethod.TRACE;
+            break;
+        default: 
+            System.err.println("HTTP Request Method not expected.");
+            throw new HTTPParseException();
+        }
+        
+        this.resourceChain = lineWords[1];
+        if(lineWords[1].length()>1) {
+            this.resourcePath = new String [2];
+            this.resourcePath[0] = lineWords[1].substring(1).split("/")[0];
+            this.resourcePath[1] = lineWords[1].substring(1).split("/")[1].split("\\?")[0];
+        }else {
+            this.resourcePath = new String[0];
+        }
+        this.resourceName = lineWords[1].substring(1).split("\\?")[0];
+        this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
+        
+        // Second line (Header params or nothing)
+        lineWords =  bReader.readLine().split(" ");
+
+        String newLine = "";
+
+        while(lineWords != null && lineWords[0].length() > 0) {
+          // Exception, invalid header format
+          if(lineWords.length<2) throw new HTTPParseException();
+          String header = lineWords[0].substring(0,lineWords[0].length()-1);
+          String content = lineWords[1];
+          this.headerParameters.put(header, content);
+          newLine = bReader.readLine();
+          if(newLine!=null){
+            lineWords =  newLine.split(" ");
+          }else{
+            lineWords = null;
+          }
+        }        
+
+        // Exception null line after header
+        if(lineWords==null) throw new HTTPParseException();
+
+        String line = bReader.readLine();
+        String message = "";
+        String [] messages;
+        
+        while(line != null && !line.isEmpty()) {
+            message += line;
+            messages = line.split("&");
+            for(int i=0; i<messages.length; i++) {
+                this.resourceParameters.put(messages[i].split("=")[0], messages[i].split("=")[1]);
+            }
+            line = bReader.readLine();
+        }
+        if(!message.isEmpty()) {
+            this.content = message;
+            this.contentLength = message.length();
+        }
+    }
   }
 
   public HTTPRequestMethod getMethod() {
