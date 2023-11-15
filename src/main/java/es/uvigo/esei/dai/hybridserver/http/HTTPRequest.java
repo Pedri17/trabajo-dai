@@ -46,6 +46,7 @@ public class HTTPRequest {
         // First line (Method, location, version)
         String [] lineWords =  bReader.readLine().split(" ");
         
+        // Exception there's not first line or it doesn't have all the parameters
         if(lineWords==null || lineWords.length<3) throw new HTTPParseException();
         
         //Get HTTPRequest Method
@@ -78,8 +79,10 @@ public class HTTPRequest {
             System.err.println("HTTP Request Method not expected.");
             throw new HTTPParseException();
         }
-        
+
+        // Ger Resource Chain
         this.resourceChain = lineWords[1];
+
         if(lineWords[1].length()>1) {
             this.resourcePath = new String [2];
             this.resourcePath[0] = lineWords[1].substring(1).split("/")[0];
@@ -88,6 +91,8 @@ public class HTTPRequest {
             this.resourcePath = new String[0];
         }
         this.resourceName = lineWords[1].substring(1).split("\\?")[0];
+        
+        // Get HTTP Version
         this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
         
         // Second line (Header params or nothing)
@@ -98,10 +103,14 @@ public class HTTPRequest {
         while(lineWords != null && lineWords[0].length() > 0) {
           // Exception, invalid header format
           if(lineWords.length<2) throw new HTTPParseException();
+
           String header = lineWords[0].substring(0,lineWords[0].length()-1);
           String content = lineWords[1];
+
+          // Put a Header Parameter
           this.headerParameters.put(header, content);
           newLine = bReader.readLine();
+          
           if(newLine!=null){
             lineWords =  newLine.split(" ");
           }else{
