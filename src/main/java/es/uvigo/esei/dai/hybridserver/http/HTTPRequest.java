@@ -20,10 +20,9 @@ package es.uvigo.esei.dai.hybridserver.http;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashMap;
+import java.net.URLDecoder;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class HTTPRequest {
 	
@@ -40,8 +39,9 @@ public class HTTPRequest {
   public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
     try(BufferedReader bReader = new BufferedReader(reader)){
         
+        this.resourceParameters = new LinkedHashMap<String, String>();  
         this.headerParameters = new LinkedHashMap<String, String>();
-        this.resourceParameters = new LinkedHashMap<String, String>();
+        
 
         // First line (Method, location, version)
         String [] lineWords =  bReader.readLine().split(" ");
@@ -83,13 +83,25 @@ public class HTTPRequest {
         // Ger Resource Chain
         this.resourceChain = lineWords[1];
 
+        // Get Resource Path
         if(lineWords[1].length()>1) {
-            this.resourcePath = new String [2];
-            this.resourcePath[0] = lineWords[1].substring(1).split("/")[0];
-            this.resourcePath[1] = lineWords[1].substring(1).split("/")[1].split("\\?")[0];
+            this.resourcePath = lineWords[1].substring(1).split("/");
+            if(lineWords[1].contains("?")){
+              this.resourcePath[this.resourcePath.length-1] = this.resourcePath[this.resourcePath.length-1].split("\\?")[0];             
+            }
         }else {
             this.resourcePath = new String[0];
         }
+
+        // Get Resource Params (on URI)
+        if(lineWords[1].contains("?")){
+          String [] resourceArray = lineWords[1].split("\\?")[1].split("&");
+          for(int i=0; i<resourceArray.length; i++){
+            this.resourceParameters.put(resourceArray[i].split("=")[0],resourceArray[i].split("=")[1]);
+          }
+        }
+
+        // Get Resource Name
         this.resourceName = lineWords[1].substring(1).split("\\?")[0];
         
         // Get HTTP Version
@@ -109,33 +121,54 @@ public class HTTPRequest {
 
           // Put a Header Parameter
           this.headerParameters.put(header, content);
+
+          // Get next line (while is not empty)
           newLine = bReader.readLine();
-          
+
           if(newLine!=null){
             lineWords =  newLine.split(" ");
           }else{
             lineWords = null;
           }
-        }        
+        }
 
         // Exception null line after header
         if(lineWords==null) throw new HTTPParseException();
 
-        String line = bReader.readLine();
+        // Get first content line
+        newLine = bReader.readLine();
         String message = "";
-        String [] messages;
+
+        String type = this.headerParameters.get("Content-Type");
         
-        while(line != null && !line.isEmpty()) {
-            message += line;
-            messages = line.split("&");
-            for(int i=0; i<messages.length; i++) {
-                this.resourceParameters.put(messages[i].split("=")[0], messages[i].split("=")[1]);
+        // Get content (Resource Parameters)
+        while(newLine != null && !newLine.isEmpty()) {
+            
+            // Decode if content is codified
+            if(type!=null && type.startsWith("application/x-www-form-urlencoded")){
+              newLine = URLDecoder.decode(newLine, "UTF-8");
             }
-            line = bReader.readLine();
+            
+            message += newLine;
+            
+            String [] resourceArray = newLine.split("&");
+            for(int i=0; i<resourceArray.length; i++){
+              this.resourceParameters.put(resourceArray[i].split("=")[0],resourceArray[i].split("=")[1]);
+            }
+            
+            newLine = bReader.readLine();
         }
+
+        String contLength = headerParameters.get("Content-Length");
+
+        // Get Content Length
+        if(contLength != null){
+          this.contentLength = Integer.parseInt(contLength);
+        }
+
+        // Get content
         if(!message.isEmpty()) {
             this.content = message;
-            this.contentLength = message.length();
         }
     }
   }
