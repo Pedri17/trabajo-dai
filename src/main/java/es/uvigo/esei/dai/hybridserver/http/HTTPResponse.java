@@ -93,7 +93,7 @@ public class HTTPResponse {
     // First line
     message.append(this.version).append(" ")
         .append(this.status.getCode()).append(" ")
-        .append(this.status).append("\r\n");
+        .append(this.status.getStatus()).append("\r\n");
 
     // Put parameters
     for(String paramName: this.params.keySet()){
