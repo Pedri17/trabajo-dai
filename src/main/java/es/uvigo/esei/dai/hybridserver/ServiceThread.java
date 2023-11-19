@@ -69,7 +69,7 @@ public class ServiceThread implements Runnable {
 								aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
 									.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
 									.append("</head>").append("<body>").append("<h1>Hybrid Server</h1>")
-									.append("Autores: Pedro Jalda Fonseca, Raúl Civeira Corral.")
+									.append("Autor: Pedro Jalda Fonseca.")
 									.append("</body>").append("</html>");
 													
 								response.setStatus(HTTPResponseStatus.S200);

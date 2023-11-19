@@ -21,97 +21,104 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HTTPResponse {
-    
+
     private HTTPResponseStatus status;
     private String version;
     private String content;
-    private Map<String, String> parameters;
+    private Map<String, String> params;
 
-    public HTTPResponse() {
-        this.parameters = new LinkedHashMap<>();
+  public HTTPResponse() {
+    version = "";
+    content = "";
+    params = new HashMap<String,String>(); 
+  }
+
+  public HTTPResponseStatus getStatus() {
+    return this.status;
+  }
+
+  public void setStatus(HTTPResponseStatus status) {
+    this.status = status;
+  }
+
+  public String getVersion() {
+    return this.version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
+  public String getContent() {
+    return this.content;
+  }
+
+  public void setContent(String content) {
+    this.content = content;
+  }
+
+  public Map<String, String> getParameters() {
+    return this.params;
+  }
+
+  public String putParameter(String name, String value) {
+    return this.params.put(name, value);
+  }
+
+  public boolean containsParameter(String name) {
+    return this.params.containsKey(name);
+  }
+
+  public String removeParameter(String name) {
+    return this.params.remove(name);
+  }
+
+  public void clearParameters() {
+    this.params = new HashMap<String, String>();
+  }
+
+  public List<String> listParameters() {
+    return new ArrayList<String>(this.params.keySet());
+  }
+
+  public void print(Writer writer) throws IOException {
+    
+    StringBuilder message = new StringBuilder();
+
+    // First line
+    message.append(this.version).append(" ")
+        .append(this.status.getCode()).append(" ")
+        .append(this.status).append("\r\n");
+
+    // Put parameters
+    for(String paramName: this.params.keySet()){
+        message.append(paramName).append(": ").append(this.params.get(paramName)).append("\r\n");
     }
 
-    public HTTPResponseStatus getStatus() {
-        return status;
+    // Put content
+    if(content.length()>0){
+        message.append("Content-Length: ").append(this.content.length()).append("\r\n\r\n").append(this.content);
+    }else{
+        message.append("\r\n");
     }
 
-    public void setStatus(HTTPResponseStatus status) {
-        this.status = status;
+    // Print message
+    writer.append(message.toString());
+  }
+
+  @Override
+  public String toString() {
+    try (final StringWriter writer = new StringWriter()) {
+      this.print(writer);
+
+      return writer.toString();
+    } catch (IOException e) {
+      throw new RuntimeException("Unexpected I/O exception", e);
     }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public Map<String, String> getParameters() {
-        return parameters;
-    }
-
-    public void putParameter(String name, String value) {
-        parameters.put(name, value);
-    }
-
-    public boolean containsParameter(String name) {
-        return parameters.containsKey(name);
-    }
-
-    public String removeParameter(String name) {
-        return parameters.remove(name);
-    }
-
-    public void clearParameters() {
-        parameters.clear();
-    }
-
-    public List<String> listParameters() {
-        return new ArrayList<>(parameters.keySet());
-    }
-
-    public void print(Writer writer) throws IOException {
-        int contLength = 0;
-        if (content != null) contLength = content.length();
-        StringBuilder aux = new StringBuilder();
-
-        aux.append(version).append(" ").append(status.getCode()).append(" ").append(status.getStatus()).append("\r\n");
-
-        if (contLength > 0) parameters.put("Content-Length", Integer.toString(contLength));
-
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            aux.append(entry.getKey()).append(": ").append(entry.getValue()).append("\r\n");
-        }
-
-        aux.append("\r\n");
-
-        if (contLength > 0) aux.append(content);
-
-        writer.write(aux.toString());
-    }
-
-    @Override
-    public String toString() {
-        try (final StringWriter writer = new StringWriter()) {
-            this.print(writer);
-
-            return writer.toString();
-        } catch (IOException e) {
-            throw new RuntimeException("Unexpected I/O exception", e);
-        }
-    }
+  }
 }
