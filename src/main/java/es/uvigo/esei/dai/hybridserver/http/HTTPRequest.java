@@ -37,139 +37,141 @@ public class HTTPRequest {
 	int contentLength = 0;
 	
   public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
-    try(BufferedReader bReader = new BufferedReader(reader)){
+    BufferedReader bReader = new BufferedReader(reader);
         
-        this.resourceParameters = new LinkedHashMap<String, String>();  
-        this.headerParameters = new LinkedHashMap<String, String>();
-        
+    this.resourceParameters = new LinkedHashMap<String, String>();  
+    this.headerParameters = new LinkedHashMap<String, String>();
+    
 
-        // First line (Method, location, version)
-        String [] lineWords =  bReader.readLine().split(" ");
-        
-        // Exception there's not first line or it doesn't have all the parameters
-        if(lineWords==null || lineWords.length<3) throw new HTTPParseException();
-        
-        //Get HTTPRequest Method
-        switch(lineWords[0]) {
-        case "GET":
-            this.method = HTTPRequestMethod.GET;
-            break;
-        case "CONNECT":
-            this.method = HTTPRequestMethod.CONNECT;
-            break;
-        case "DELETE":
-            this.method = HTTPRequestMethod.DELETE;
-            break;
-        case "HEAD":
-            this.method = HTTPRequestMethod.HEAD;
-            break;
-        case "OPTIONS":
-            this.method = HTTPRequestMethod.OPTIONS;
-            break;
-        case "POST":
-            this.method = HTTPRequestMethod.POST;
-            break;
-        case "PUT":
-            this.method = HTTPRequestMethod.PUT;
-            break;
-        case "TRACE":
-            this.method = HTTPRequestMethod.TRACE;
-            break;
-        default: 
-            System.err.println("HTTP Request Method not expected.");
-            throw new HTTPParseException();
-        }
+    // First line (Method, location, version)
+    String [] lineWords =  bReader.readLine().split(" ");
+    
+    // Exception there's not first line or it doesn't have all the parameters
+    if(lineWords==null || lineWords.length<3) throw new HTTPParseException();
+    
+    //Get HTTPRequest Method
+    switch(lineWords[0]) {
+      case "GET":
+        this.method = HTTPRequestMethod.GET;
+        break;
+      case "CONNECT":
+        this.method = HTTPRequestMethod.CONNECT;
+        break;
+      case "DELETE":
+        this.method = HTTPRequestMethod.DELETE;
+        break;
+      case "HEAD":
+        this.method = HTTPRequestMethod.HEAD;
+        break;
+      case "OPTIONS":
+        this.method = HTTPRequestMethod.OPTIONS;
+        break;
+      case "POST":
+        this.method = HTTPRequestMethod.POST;
+        break;
+      case "PUT":
+        this.method = HTTPRequestMethod.PUT;
+        break;
+      case "TRACE":
+        this.method = HTTPRequestMethod.TRACE;
+        break;
+      default: 
+        System.err.println("HTTP Request Method not expected.");
+        throw new HTTPParseException();
+    }
 
-        // Ger Resource Chain
-        this.resourceChain = lineWords[1];
+    // Ger Resource Chain
+    this.resourceChain = lineWords[1];
 
-        // Get Resource Path
-        if(lineWords[1].length()>1) {
-            this.resourcePath = lineWords[1].substring(1).split("/");
-            if(lineWords[1].contains("?")){
-              this.resourcePath[this.resourcePath.length-1] = this.resourcePath[this.resourcePath.length-1].split("\\?")[0];             
-            }
-        }else {
-            this.resourcePath = new String[0];
-        }
-
-        // Get Resource Params (on URI)
+    // Get Resource Path
+    if(lineWords[1].length()>1) {
+        this.resourcePath = lineWords[1].substring(1).split("/");
         if(lineWords[1].contains("?")){
-          String [] resourceArray = lineWords[1].split("\\?")[1].split("&");
-          for(int i=0; i<resourceArray.length; i++){
-            this.resourceParameters.put(resourceArray[i].split("=")[0],resourceArray[i].split("=")[1]);
-          }
+          this.resourcePath[this.resourcePath.length-1] = this.resourcePath[this.resourcePath.length-1].split("\\?")[0];             
         }
+    }else {
+        this.resourcePath = new String[0];
+    }
 
-        // Get Resource Name
-        this.resourceName = lineWords[1].substring(1).split("\\?")[0];
-        
-        // Get HTTP Version
-        this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
-        
-        // Second line (Header params or nothing)
-        lineWords =  bReader.readLine().split(" ");
+    // Get Resource Params (on URI)
+    if(lineWords[1].contains("?")){
+      String [] resourceArray = lineWords[1].split("\\?")[1].split("&");
+      for(int i=0; i<resourceArray.length; i++){
+        this.resourceParameters.put(resourceArray[i].split("=")[0],resourceArray[i].split("=")[1]);
+      }
+    }
 
-        String newLine = "";
+    // Get Resource Name
+    this.resourceName = lineWords[1].substring(1).split("\\?")[0];
+    
+    // Get HTTP Version
+    this.httpVersion = lineWords[2].substring(0, lineWords[2].length());
+    
+    // Second line (Header params or nothing)
+    lineWords =  bReader.readLine().split(" ");
 
-        while(lineWords != null && lineWords[0].length() > 0) {
-          // Exception, invalid header format
-          if(lineWords.length<2) throw new HTTPParseException();
+    String newLine = "";
 
-          String header = lineWords[0].substring(0,lineWords[0].length()-1);
-          String content = lineWords[1];
+    // Put all header params
+    
+    while(lineWords != null && lineWords[0].length() > 0) {
+      // Exception, invalid header format
+      if(lineWords.length<2) throw new HTTPParseException();
 
-          // Put a Header Parameter
-          this.headerParameters.put(header, content);
+      String header = lineWords[0].substring(0,lineWords[0].length()-1);
+      String content = lineWords[1];
 
-          // Get next line (while is not empty)
-          newLine = bReader.readLine();
+      // Put a Header Parameter
+      this.headerParameters.put(header, content);
 
-          if(newLine!=null){
-            lineWords =  newLine.split(" ");
-          }else{
-            lineWords = null;
-          }
-        }
+      // Get next line (while is not empty)
+      newLine = bReader.readLine();
 
-        // Exception null line after header
-        if(lineWords==null) throw new HTTPParseException();
+      if(newLine!=null){
+        lineWords =  newLine.split(" ");
+      }else{
+        lineWords = null;
+      }
+    }
 
-        // Get first content line
-        newLine = bReader.readLine();
-        String message = "";
+    // Exception null line after header
+    if(lineWords==null) throw new HTTPParseException();
 
-        String type = this.headerParameters.get("Content-Type");
-        
-        // Get content (Resource Parameters)
-        while(newLine != null && !newLine.isEmpty()) {
-            
-            // Decode if content is codified
-            if(type!=null && type.startsWith("application/x-www-form-urlencoded")){
-              newLine = URLDecoder.decode(newLine, "UTF-8");
-            }
-            
-            message += newLine;
-            
-            String [] resourceArray = newLine.split("&");
-            for(int i=0; i<resourceArray.length; i++){
-              this.resourceParameters.put(resourceArray[i].split("=")[0],resourceArray[i].split("=")[1]);
-            }
-            
-            newLine = bReader.readLine();
-        }
+    String contLength = headerParameters.get("Content-Length");
 
-        String contLength = headerParameters.get("Content-Length");
+    if(contLength != null){
+      // Get Content Length
+      this.contentLength = Integer.parseInt(contLength);
 
-        // Get Content Length
-        if(contLength != null){
-          this.contentLength = Integer.parseInt(contLength);
-        }
+      StringBuilder message = new StringBuilder();
 
-        // Get content
-        if(!message.isEmpty()) {
-            this.content = message;
-        }
+      for(int i=0; i<this.contentLength; i++){
+        char newChar = (char) bReader.read();
+        message.append(newChar);
+      }
+      
+      String type = this.headerParameters.get("Content-Type");
+
+      // Decode if content is codified
+      if(type!=null && type.startsWith("application/x-www-form-urlencoded")){
+        StringBuilder decodedMessage = new StringBuilder();
+        decodedMessage.append(URLDecoder.decode(message.toString(), "UTF-8"));
+        message = decodedMessage;
+        System.out.println("Decoded message: "+message.toString());
+      }
+
+      // Get content (Resource Parameters)
+      String [] resourceArray = message.toString().split("&");
+      for(int i=0; i<resourceArray.length; i++){
+        if(!resourceArray[i].contains("=")) throw new HTTPParseException();
+        this.resourceParameters.put(resourceArray[i].split("=")[0],resourceArray[i].split("=")[1]);
+        System.out.println("Anhadido: "+resourceArray[i].split("=")[0]+" - "+resourceArray[i].split("=")[1]);
+      }
+      
+      // Get content
+      if(!message.isEmpty()) {
+          this.content = message.toString();
+      }
     }
   }
 

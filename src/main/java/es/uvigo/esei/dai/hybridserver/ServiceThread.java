@@ -28,7 +28,6 @@ public class ServiceThread implements Runnable {
 	public void run() {
 		try(BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))){
 			try{
-				
 				try {
 					this.request = new HTTPRequest(br);
 					System.out.println("-----REQUEST-------");
@@ -135,6 +134,7 @@ public class ServiceThread implements Runnable {
 					response.print(writer);
 				}catch(IOException e){
 					System.err.println("No ha sido posible escribir el socket: "+e.getMessage());
+					e.printStackTrace();
 				}
 			}
 		}catch(IOException e){
