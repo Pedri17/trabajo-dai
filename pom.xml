@@ -35,6 +35,15 @@
 				<role>student</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>rccorral20</id>
+			<email>rccorral20@esei.uvigo.es</email>
+			<name>Raul Civeira Corral</name>
+			<organization>Escola Superior de Enxeñaría Informática - Universidade de Vigo</organization>
+			<roles>
+				<role>student</role>
+			</roles>
+		</developer>
 	</developers>
 
 	<properties>
