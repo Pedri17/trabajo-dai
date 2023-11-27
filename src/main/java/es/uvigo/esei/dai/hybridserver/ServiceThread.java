@@ -28,108 +28,140 @@ public class ServiceThread implements Runnable {
 	public void run() {
 		try(Socket socket = this.socket){
 			try(BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))){
-				try{
-					try {
-						this.request = new HTTPRequest(br);
-						System.out.println("-----REQUEST-------");
-						System.out.println(request.toString());
-						System.out.println("-------------------");
+				try {
+					this.request = new HTTPRequest(br);
+					int port = socket.getLocalPort();
 
-						switch(request.getMethod()) {
-							case GET:
+					System.out.println("-----REQUEST-------");
+					System.out.println(request.toString());
+					System.out.println("-------------------");
 
-								if (request.getResourceName().equals("html")){
-									String requestUuid = request.getResourceParameters().get("uuid");
-									// Request message has a uuid field
-									if (requestUuid != null){
-										if (controller.contains(requestUuid)){
-											// Known uuid
-											String uuidContent = controller.getContent(requestUuid);
-											
-											response.setStatus(HTTPResponseStatus.S200);
-											response.putParameter("Content-Type", "text/html");
-											response.setContent(uuidContent);
-										}else{
-											// Unknown uuid
-											response.setStatus(HTTPResponseStatus.S404);
-											response.setContent("Not Found");
-										}
-									}else{
-										StringBuilder res = new StringBuilder();
-										for(String uuid : controller.getData().list()){
-											res.append(uuid);
-										}
+					switch(request.getMethod()) {
+						case GET:
 
+							if (request.getResourceName().equals("html")){
+								String requestUuid = request.getResourceParameters().get("uuid");
+								// Request message has a uuid field
+								if (requestUuid != null){
+									if (controller.contains(requestUuid)){
+										// Known uuid
+										String uuidContent = controller.getContent(requestUuid);
+										
 										response.setStatus(HTTPResponseStatus.S200);
 										response.putParameter("Content-Type", "text/html");
-										response.setContent(res.toString());
+										response.setContent(uuidContent);
+									}else{
+										// Unknown uuid
+										response.setStatus(HTTPResponseStatus.S404);
+										response.setContent("Not Found");
 									}
-								} else if (request.getResourceChain().equals("/")) {
-									// Wellcome page
-									StringBuilder aux = new StringBuilder();
-									aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
-										.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
-										.append("</head>").append("<body>").append("<h1>Hybrid Server</h1>")
-										.append("Autor: Pedro Jalda Fonseca.")
-										.append("</body>").append("</html>");
-														
+								}else{
+									StringBuilder res = new StringBuilder();
+									
+									// HTML base
+									res.append("<!DOCTYPE html>")
+										.append("<html lang=\"es\">")
+											.append("<head>")
+												.append("<meta charset=\"utf-8\"/>")
+												.append("<title>Hybrid Server</title>")
+											.append("</head>")
+											.append("<body>")
+												.append("<h1>UUID List Hybrid Server</h1>")
+												.append("<ol>");
+									
+									// Add uuid list to HTML
+									for(String uuid : controller.getData().list()){
+										res.append("<li><a href=\"http://localhost:").append(port)
+											.append("/html?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
+									}
+
+									// HTML close
+									res.append("</ol>")
+										.append("</body>")
+									.append("</html>");
+
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(aux.toString());
-								}else{
-									response.setStatus(HTTPResponseStatus.S400);
-									response.setContent("Bad Request");
+									response.setContent(res.toString());
 								}
-								
-								break;
-						
-							case POST:
-							
-								if (request.getResourceParameters().containsKey("html")){
-									String newUuid = controller.getData().create(request.getResourceParameters().get("html"));
-									StringBuilder aux = new StringBuilder();
-									aux.append("<a href=\"html?uuid=").append(newUuid).append("\">").append(newUuid).append("</a>");
-
-									response.setStatus(HTTPResponseStatus.S200);
-									response.setContent(aux.toString());
-								}else{
-									response.setStatus(HTTPResponseStatus.S400);
-									response.setContent("Bad Request");
-								}
-
-								break;
-
-							case DELETE:
-							
-								// UUID is on the data structure
-								String uuid = request.getResourceParameters().get("uuid");
-								if(controller.contains(uuid)){
-									controller.getData().delete(uuid);
-									response.setStatus(HTTPResponseStatus.S200);
-								}else{
-									// UUID not found
-									response.setStatus(HTTPResponseStatus.S404);
-									response.setContent("Not Found");
-								}
-
-								break;
-
-							default:
+							} else if (request.getResourceChain().equals("/")) {
+								// Wellcome page
+								StringBuilder aux = new StringBuilder();
+								aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
+									.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
+									.append("</head>").append("<body>").append("<h1>Hybrid Server</h1>")
+									.append("Autor: Pedro Jalda Fonseca.")
+									.append("</body>").append("</html>");
+													
+								response.setStatus(HTTPResponseStatus.S200);
+								response.putParameter("Content-Type", "text/html");
+								response.setContent(aux.toString());
+							}else{
 								response.setStatus(HTTPResponseStatus.S400);
-								response.setContent("Method not implemented");
-								break;
-						}
+								response.setContent("Bad Request");
+							}
+							
+							break;
+					
+						case POST:
 						
-					}catch(Exception e) {
-						response.setStatus(HTTPResponseStatus.S500);
-						response.setContent("Internal Server Error");
-						e.printStackTrace();
+							if (request.getResourceParameters().containsKey("html")){
+								String newUuid = controller.getData().create(request.getResourceParameters().get("html"));
+								StringBuilder aux = new StringBuilder();
+
+								// HTML base
+								aux.append("<!DOCTYPE html>")
+									.append("<html lang=\"es\">")
+										.append("<head>")
+											.append("<meta charset=\"utf-8\"/>")
+											.append("<title>Hybrid Server</title>")
+										.append("</head>")
+										.append("<body>")
+											.append("<h1>Hybrid Server</h1>")
+											.append("<ol>");
+
+								// HTML content
+								aux.append("<li> <a href=\"html?uuid=").append(newUuid).append("\">").append(newUuid).append("</a> </li>");
+
+								// HTML close
+								aux.append("</ol>")
+									.append("</body>")
+										.append("</html>");
+
+								response.setStatus(HTTPResponseStatus.S200);
+								response.setContent(aux.toString());
+							}else{
+								response.setStatus(HTTPResponseStatus.S400);
+								response.setContent("Bad Request");
+							}
+
+							break;
+
+						case DELETE:
+						
+							// UUID is on the data structure
+							String uuid = request.getResourceParameters().get("uuid");
+							if(controller.contains(uuid)){
+								controller.getData().delete(uuid);
+								response.setStatus(HTTPResponseStatus.S200);
+							}else{
+								// UUID not found
+								response.setStatus(HTTPResponseStatus.S404);
+								response.setContent("Not Found");
+							}
+
+							break;
+
+						default:
+							response.setStatus(HTTPResponseStatus.S400);
+							response.setContent("Method not implemented");
+							break;
 					}
-
-					System.out.println("-----RESPONSE-------");
-					System.out.println(response.toString());
-					System.out.println("--------------------");
-
+					
+				}catch(Exception e) {
+					response.setStatus(HTTPResponseStatus.S500);
+					response.setContent("Internal Server Error");
+					e.printStackTrace();
 				}finally{
 					try(BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))){
 						response.print(writer);
