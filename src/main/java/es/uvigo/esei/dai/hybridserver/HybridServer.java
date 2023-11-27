@@ -27,8 +27,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class HybridServer implements AutoCloseable {
-  private int SERVICE_PORT = 8888;
-  private int MAX_CLIENTS = 10;
+  private int servicePort = 8888;
+  private int maxClients = 10;
   private Thread serverThread;
   private boolean stop;
   
@@ -40,8 +40,8 @@ public class HybridServer implements AutoCloseable {
 
     Properties properties = new ConfigurationController().getProperties();
 
-    SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
-    MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+    servicePort = Integer.parseInt(properties.getProperty("port"));
+    maxClients = Integer.parseInt(properties.getProperty("numClients"));
 
     String USER = properties.getProperty("db.user");
     String PASSWORD = properties.getProperty("db.password");
@@ -58,8 +58,8 @@ public class HybridServer implements AutoCloseable {
 
     Properties properties = new ConfigurationController().getProperties();
 
-    SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
-    MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+    servicePort = Integer.parseInt(properties.getProperty("port"));
+    maxClients = Integer.parseInt(properties.getProperty("numClients"));
 
     System.out.println("Server lauched with pages parameter.");
   }
@@ -67,8 +67,8 @@ public class HybridServer implements AutoCloseable {
   public HybridServer(Properties properties) {
     this.stop = false;
 
-    SERVICE_PORT = Integer.parseInt(properties.getProperty("port"));
-    MAX_CLIENTS = Integer.parseInt(properties.getProperty("numClients"));
+    servicePort = Integer.parseInt(properties.getProperty("port"));
+    maxClients = Integer.parseInt(properties.getProperty("numClients"));
 
     String USER = properties.getProperty("db.user");
     String PASSWORD = properties.getProperty("db.password");
@@ -79,7 +79,7 @@ public class HybridServer implements AutoCloseable {
   }
 
   public int getPort() {
-    return SERVICE_PORT;
+    return servicePort;
   }
 
   public void start() {
@@ -88,8 +88,8 @@ public class HybridServer implements AutoCloseable {
       @Override
       public void run() {
     	  
-        try (final ServerSocket serverSocket = new ServerSocket(SERVICE_PORT)) {
-          threadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
+        try (final ServerSocket serverSocket = new ServerSocket(servicePort)) {
+          threadPool = Executors.newFixedThreadPool(maxClients);
         	
         	while (true) {
         		Socket socket = serverSocket.accept();
@@ -112,7 +112,7 @@ public class HybridServer implements AutoCloseable {
   public void close() {
     this.stop = true;
 
-    try (Socket socket = new Socket("localhost", SERVICE_PORT)) {
+    try (Socket socket = new Socket("localhost", servicePort)) {
       // Esta conexión se hace, simplemente, para "despertar" el hilo servidor
     } catch (IOException e) {
       throw new RuntimeException(e);

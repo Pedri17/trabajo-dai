@@ -11,20 +11,20 @@ import java.util.List;
 import java.util.UUID;
 
 public class HTMLDaoDB implements HTMLDao {
-    private String USER;
-    private String PASSWORD;
-    private String URL;
+    private String user;
+    private String password;
+    private String url;
     
     public HTMLDaoDB (String user, String password, String url) {
-        USER = user;
-        PASSWORD = password;
-        URL = url;
+        this.user = user;
+        this.password = password;
+        this.url = url;
     }
 
     
     @Override
     public String get(String uuid) {
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT content FROM HTML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, uuid);
@@ -44,7 +44,7 @@ public class HTMLDaoDB implements HTMLDao {
     @Override
     public List<String> list() {
         List<String> htmlList = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT uuid FROM HTML";
             try (Statement statement = connection.createStatement()) {
                 try (ResultSet resultSet = statement.executeQuery(sql)) {
@@ -61,7 +61,7 @@ public class HTMLDaoDB implements HTMLDao {
 
     @Override
     public void delete(String uuid) {
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "DELETE FROM HTML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, uuid);
@@ -74,7 +74,7 @@ public class HTMLDaoDB implements HTMLDao {
 
     @Override
     public String create(String htmlContent) {
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
             String sql = "INSERT INTO HTML (uuid, content) VALUES (?, ?)";
@@ -99,7 +99,7 @@ public class HTMLDaoDB implements HTMLDao {
     }
 
     private boolean uuidExistsInDatabase(String uuid) {
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT COUNT(*) FROM HTML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, uuid);
