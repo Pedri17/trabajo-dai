@@ -1,13 +1,13 @@
-package es.uvigo.esei.dai.hybridserver;
+package es.uvigo.esei.dai.hybridserver.xslt;
 
-public class HTMLController {
-	private HTMLDao content;
+public class XSLTController {
+	private XSLTDao content;
 	
-	public HTMLController(HTMLDao contentStructure) {
+	public XSLTController(XSLTDao contentStructure) {
 		this.content = contentStructure;
 	}
 	
-	public HTMLDao getData() {
+	public XSLTDao getData() {
 		return content;
 	}
 

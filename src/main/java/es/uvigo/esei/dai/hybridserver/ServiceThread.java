@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
+import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
 import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
@@ -86,16 +87,9 @@ public class ServiceThread implements Runnable {
 								}
 							} else if (request.getResourceChain().equals("/")) {
 								// Wellcome page
-								StringBuilder aux = new StringBuilder();
-								aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
-									.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
-									.append("</head>").append("<body>").append("<h1>Hybrid Server</h1>")
-									.append("Autor: Pedro Jalda Fonseca.")
-									.append("</body>").append("</html>");
-													
+								response.setContent(buildWelcomePage());		
+								response.putParameter("Content-Type", "text/html");		
 								response.setStatus(HTTPResponseStatus.S200);
-								response.putParameter("Content-Type", "text/html");
-								response.setContent(aux.toString());
 							}else{
 								response.setStatus(HTTPResponseStatus.S400);
 								response.setContent("Bad Request");
@@ -177,5 +171,15 @@ public class ServiceThread implements Runnable {
 			exc.printStackTrace();
 		}
 		
+	}
+
+	public String buildWelcomePage(){
+		StringBuilder aux = new StringBuilder();
+									aux.append("<!DOCTYPE html>").append("<html lang=\"es\">").append("<head>")
+										.append("  <meta charset=\"utf-8\"/>").append("  <title>Hybrid Server</title>")
+										.append("</head>").append("<body>").append("<h1>Hybrid Server</h1>")
+										.append("Autor: Pedro Jalda Fonseca.")
+										.append("</body>").append("</html>");
+		return aux.toString();
 	}
 }

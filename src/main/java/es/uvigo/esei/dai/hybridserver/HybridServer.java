@@ -26,6 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import es.uvigo.esei.dai.hybridserver.html.HTMLController;
+import es.uvigo.esei.dai.hybridserver.html.HTMLDaoDB;
+
 public class HybridServer implements AutoCloseable {
   private int servicePort = 8888;
   private int maxClients = 10;
@@ -43,17 +46,40 @@ public class HybridServer implements AutoCloseable {
     servicePort = Integer.parseInt(properties.getProperty("port"));
     maxClients = Integer.parseInt(properties.getProperty("numClients"));
 
-    String USER = properties.getProperty("db.user");
-    String PASSWORD = properties.getProperty("db.password");
-    String URL = properties.getProperty("db.url");
+    String user = properties.getProperty("db.user");
+    String password = properties.getProperty("db.password");
+    String url = properties.getProperty("db.url");
 
-    controller = new HTMLController(new HTMLDaoDB(USER, PASSWORD, URL));
+    controller = new HTMLController(new HTMLDaoDB(user, password, url));
     
     System.out.println("Server launched without any parameters.");
   }
+  
+  public HybridServer(Map<String, String> pages) {
+    this.stop = false;
+    controller = new HTMLController(new HTMLDaoMap(pages));
 
-  public HybridServer(Configuration configuration){
+    Properties properties = new ConfigurationController().getProperties();
+
+    servicePort = Integer.parseInt(properties.getProperty("port"));
+    maxClients = Integer.parseInt(properties.getProperty("numClients"));
+
+    System.out.println("Server lauched with pages parameter.");
+  }
+
+  public HybridServer(Configuration config){
+    this.stop = false;
+
+    servicePort = config.getHttpPort();
+    maxClients = config.getNumClients();
     
+    String user = config.getDbUser();
+    String password = config.getDbPassword();
+    String url = config.getDbURL();
+
+    controller = new HTMLController(new HTMLDaoDB(user, password, url));
+
+    System.out.println("Server launched with condifuration");
   }
 
   public HybridServer(Properties properties) {
