@@ -52,16 +52,8 @@ public class HybridServer implements AutoCloseable {
     System.out.println("Server launched without any parameters.");
   }
 
-  public HybridServer(Map<String, String> pages) {
-    this.stop = false;
-    controller = new HTMLController(new HTMLDaoMap(pages));
-
-    Properties properties = new ConfigurationController().getProperties();
-
-    servicePort = Integer.parseInt(properties.getProperty("port"));
-    maxClients = Integer.parseInt(properties.getProperty("numClients"));
-
-    System.out.println("Server lauched with pages parameter.");
+  public HybridServer(Configuration configuration){
+    
   }
 
   public HybridServer(Properties properties) {
