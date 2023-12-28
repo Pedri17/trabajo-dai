@@ -12,18 +12,30 @@ import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
 import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponseStatus;
+import es.uvigo.esei.dai.hybridserver.xml.XMLController;
+import es.uvigo.esei.dai.hybridserver.xsd.XSDController;
+import es.uvigo.esei.dai.hybridserver.xslt.XSLTController;
 
 public class ServiceThread implements Runnable {
 	private Socket socket;
-	private HTMLController controller;
 	private HTTPRequest request;
 	private HTTPResponse response;
+
+	private HTMLController htmlController;
+  	private XMLController xmlController;
+  	private XSDController xsdController;
+  	private XSLTController xsltController;
 	
-	public ServiceThread(Socket socket, HTMLController controller) {
+	public ServiceThread(Socket socket, HTMLController htmlController, XMLController xmlController, 
+						XSDController xsdController, XSLTController xsltController) {
 		this.socket = socket;
-		this.controller = controller;
 		this.response = new HTTPResponse();
 		this.response.setVersion(HTTPHeaders.HTTP_1_1.getHeader());
+
+		this.htmlController = htmlController;
+		this.xmlController = xmlController;
+		this.xsdController = xsdController;
+		this.xsltController = xsltController;
 	}
 	
 	public void run() {
@@ -44,9 +56,9 @@ public class ServiceThread implements Runnable {
 								String requestUuid = request.getResourceParameters().get("uuid");
 								// Request message has a uuid field
 								if (requestUuid != null){
-									if (controller.contains(requestUuid)){
+									if (htmlController.contains(requestUuid)){
 										// Known uuid
-										String uuidContent = controller.getContent(requestUuid);
+										String uuidContent = htmlController.getContent(requestUuid);
 										
 										response.setStatus(HTTPResponseStatus.S200);
 										response.putParameter("Content-Type", "text/html");
@@ -71,7 +83,7 @@ public class ServiceThread implements Runnable {
 												.append("<ol>");
 									
 									// Add uuid list to HTML
-									for(String uuid : controller.getData().list()){
+									for(String uuid : htmlController.getData().list()){
 										res.append("<li><a href=\"http://localhost:").append(port)
 											.append("/html?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
 									}
@@ -90,6 +102,23 @@ public class ServiceThread implements Runnable {
 								response.setContent(buildWelcomePage());		
 								response.putParameter("Content-Type", "text/html");		
 								response.setStatus(HTTPResponseStatus.S200);
+							}else if(request.getResourceName().equals("xml")){
+								String uuidXml = request.getResourceParameters().get("uuid");
+								String uuidXslt = request.getResourceParameters().get("xslt");
+								// TODO creo que tengo que validar
+
+								if(uuidXslt != null){
+									// Search local xslt uuid
+									if(xsltController.contains(uuidXslt)){
+
+									}else{
+										// Search remote xslt uuid
+										// TODO: Literalmente no sé cómo se hace
+									}
+								}
+
+								// !! Queda pendiente esta parte
+
 							}else{
 								response.setStatus(HTTPResponseStatus.S400);
 								response.setContent("Bad Request");
@@ -100,7 +129,7 @@ public class ServiceThread implements Runnable {
 						case POST:
 						
 							if (request.getResourceParameters().containsKey("html")){
-								String newUuid = controller.getData().create(request.getResourceParameters().get("html"));
+								String newUuid = htmlController.getData().create(request.getResourceParameters().get("html"));
 								StringBuilder aux = new StringBuilder();
 
 								// HTML base
@@ -135,8 +164,8 @@ public class ServiceThread implements Runnable {
 						
 							// UUID is on the data structure
 							String uuid = request.getResourceParameters().get("uuid");
-							if(controller.contains(uuid)){
-								controller.getData().delete(uuid);
+							if(htmlController.contains(uuid)){
+								htmlController.getData().delete(uuid);
 								response.setStatus(HTTPResponseStatus.S200);
 							}else{
 								// UUID not found

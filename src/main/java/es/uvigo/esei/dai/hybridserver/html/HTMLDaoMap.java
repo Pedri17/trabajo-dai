@@ -1,11 +1,10 @@
-package es.uvigo.esei.dai.hybridserver;
+package es.uvigo.esei.dai.hybridserver.html;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
-import es.uvigo.esei.dai.hybridserver.html.HTMLDao;
 
 public class HTMLDaoMap implements HTMLDao {
 	Map<String, String> uuidContentMap;

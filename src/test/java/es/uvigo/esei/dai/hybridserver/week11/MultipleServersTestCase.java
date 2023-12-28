@@ -35,9 +35,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.provider.Arguments;
 
 import es.uvigo.esei.dai.hybridserver.HybridServer;
-import es.uvigo.esei.dai.hybridserver.XMLConfigurationLoader;
 import es.uvigo.esei.dai.hybridserver.utils.MySqlJdbcDatabaseTester;
 import es.uvigo.esei.dai.hybridserver.utils.TestUtils;
+import es.uvigo.esei.dai.hybridserver.xml.XMLConfigurationLoader;
 
 public abstract class MultipleServersTestCase {
 	private static final int NUMBER_OF_SERVERS = 4;

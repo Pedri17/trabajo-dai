@@ -28,16 +28,34 @@ import java.util.concurrent.TimeUnit;
 
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.html.HTMLDaoDB;
+import es.uvigo.esei.dai.hybridserver.html.HTMLDaoMap;
+import es.uvigo.esei.dai.hybridserver.xml.XMLController;
+import es.uvigo.esei.dai.hybridserver.xml.XMLDaoDB;
+import es.uvigo.esei.dai.hybridserver.xsd.XSDController;
+import es.uvigo.esei.dai.hybridserver.xsd.XSDDaoDB;
+import es.uvigo.esei.dai.hybridserver.xslt.XSLTController;
+import es.uvigo.esei.dai.hybridserver.xslt.XSLTDaoDB;
 
 public class HybridServer implements AutoCloseable {
   private int servicePort = 8888;
   private int maxClients = 10;
   private Thread serverThread;
   private boolean stop;
-  
-  private HTMLController controller;
+
   private ExecutorService threadPool;
 
+  private HTMLController htmlController;
+  private XMLController xmlController;
+  private XSDController xsdController;
+  private XSLTController xsltController;
+
+  public void initControllers(String user, String password, String url){
+    htmlController = new HTMLController(new HTMLDaoDB(user, password, url));
+    xmlController = new XMLController(new XMLDaoDB(user, password, url));
+    xsdController = new XSDController(new XSDDaoDB(user, password, url));
+    xsltController = new XSLTController(new XSLTDaoDB(user, password, url));
+  }
+  
   public HybridServer() {
     this.stop = false;
 
@@ -49,15 +67,14 @@ public class HybridServer implements AutoCloseable {
     String user = properties.getProperty("db.user");
     String password = properties.getProperty("db.password");
     String url = properties.getProperty("db.url");
-
-    controller = new HTMLController(new HTMLDaoDB(user, password, url));
+    initControllers(user, password, url);
     
     System.out.println("Server launched without any parameters.");
   }
   
   public HybridServer(Map<String, String> pages) {
     this.stop = false;
-    controller = new HTMLController(new HTMLDaoMap(pages));
+    htmlController = new HTMLController(new HTMLDaoMap(pages));
 
     Properties properties = new ConfigurationController().getProperties();
 
@@ -76,8 +93,9 @@ public class HybridServer implements AutoCloseable {
     String user = config.getDbUser();
     String password = config.getDbPassword();
     String url = config.getDbURL();
+    initControllers(user, password, url);
 
-    controller = new HTMLController(new HTMLDaoDB(user, password, url));
+    initControllers(user, password, url);
 
     System.out.println("Server launched with condifuration");
   }
@@ -88,11 +106,11 @@ public class HybridServer implements AutoCloseable {
     servicePort = Integer.parseInt(properties.getProperty("port"));
     maxClients = Integer.parseInt(properties.getProperty("numClients"));
 
-    String USER = properties.getProperty("db.user");
-    String PASSWORD = properties.getProperty("db.password");
-    String URL = properties.getProperty("db.url");
+    String user = properties.getProperty("db.user");
+    String password = properties.getProperty("db.password");
+    String url = properties.getProperty("db.url");
+    initControllers(user, password, url);
 
-    controller = new HTMLController(new HTMLDaoDB(USER, PASSWORD, URL));
     System.out.println("Server lauched with properities parameter.");
   }
 
@@ -113,7 +131,7 @@ public class HybridServer implements AutoCloseable {
         		Socket socket = serverSocket.accept();
         		if (stop) 
               break;
-        		threadPool.execute(new ServiceThread(socket, controller));
+        		threadPool.execute(new ServiceThread(socket, htmlController, xmlController, xsdController, xsltController));
         	}
 
         } catch (IOException e) {
