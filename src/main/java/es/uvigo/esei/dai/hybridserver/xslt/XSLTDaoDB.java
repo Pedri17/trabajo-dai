@@ -23,7 +23,7 @@ public class XSLTDaoDB implements XSLTDao {
 
     
     @Override
-    public String get(String uuid) {
+    public String getContent(String uuid) {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT content FROM XSLT WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -31,6 +31,25 @@ public class XSLTDaoDB implements XSLTDao {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         return resultSet.getString("content");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public String getXsd(String uuid) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            String sql = "SELECT xsd FROM XSLT WHERE uuid = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, uuid);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("xsd");
                     }
                 }
             }

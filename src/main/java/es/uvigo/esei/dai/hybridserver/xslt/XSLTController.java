@@ -12,10 +12,14 @@ public class XSLTController {
 	}
 
 	public String getContent(String uuid){
-		return content.get(uuid);
+		return content.getContent(uuid);
+	}
+
+	public String getXsd(String uuid){
+		return content.getXsd(uuid);
 	}
 
 	public boolean contains(String uuid){
-		return content.get(uuid) != null;
+		return content.getContent(uuid) != null;
 	}
 }

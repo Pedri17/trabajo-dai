@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.UUID;
 
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
@@ -69,29 +70,15 @@ public class ServiceThread implements Runnable {
 										response.setContent("Not Found");
 									}
 								}else{
-									StringBuilder res = new StringBuilder();
-									
-									// HTML base
-									res.append("<!DOCTYPE html>")
-										.append("<html lang=\"es\">")
-											.append("<head>")
-												.append("<meta charset=\"utf-8\"/>")
-												.append("<title>Hybrid Server</title>")
-											.append("</head>")
-											.append("<body>")
-												.append("<h1>UUID List Hybrid Server</h1>")
-												.append("<ol>");
+									StringBuilder res = buildHTMLBase();
 									
 									// Add uuid list to HTML
 									for(String uuid : htmlController.getData().list()){
-										res.append("<li><a href=\"http://localhost:").append(port)
-											.append("/html?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
+										buildUuidList(res, "html", uuid, port);
 									}
 
 									// HTML close
-									res.append("</ol>")
-										.append("</body>")
-									.append("</html>");
+									buildHTMLClose(res);
 
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
@@ -105,20 +92,82 @@ public class ServiceThread implements Runnable {
 							}else if(request.getResourceName().equals("xml")){
 								String uuidXml = request.getResourceParameters().get("uuid");
 								String uuidXslt = request.getResourceParameters().get("xslt");
-								// TODO creo que tengo que validar
 
 								if(uuidXslt != null){
-									// Search local xslt uuid
+									// Search xslt uuid
 									if(xsltController.contains(uuidXslt)){
-
+										// xslt found
+										String uuidXsd = xsltController.getXsd(uuidXslt);
+										if(xsdController.contains(uuidXsd)){
+											// xsd found
+											response.setStatus(HTTPResponseStatus.S200);
+											response.putParameter("Content-Type", "application/xml");
+											response.setContent(xmlController.getContent(uuidXml));
+										}else{
+											// xsd not found
+											response.setStatus(HTTPResponseStatus.S404);
+											response.setContent("Not Found");
+										}
 									}else{
-										// Search remote xslt uuid
-										// TODO: Literalmente no sé cómo se hace
+										// xslt not found
+										response.setStatus(HTTPResponseStatus.S404);
+										response.setContent("Not Found");
 									}
 								}
+							}else if(request.getResourceName().equals("xslt")){
 
-								// !! Queda pendiente esta parte
+								String uuid = request.getResourceParameters().get("uuid");
+								if(uuid != null){
+									if(xsltController.contains(uuid)){
+										response.setStatus(HTTPResponseStatus.S200);
+										response.putParameter("Content-Type", "application/xml");
+										response.setContent(xsltController.getContent(uuid));
+									}else{
+										response.setStatus(HTTPResponseStatus.S404);
+										response.setContent("Not Found");
+									}
+								}else{
+									StringBuilder res = buildHTMLBase();
 
+									// xslt list
+									for(String thisUuid : xsltController.getData().list()){
+										buildUuidList(res, "xslt", thisUuid, port);
+									}
+
+									// close HTML
+									buildHTMLClose(res);
+
+									response.setStatus(HTTPResponseStatus.S200);
+									response.setContent(res.toString());
+								}
+
+							}else if(request.getResourceName().equals("xsd")){
+
+								String uuid = request.getResourceParameters().get("uuid");
+								if(uuid != null){
+									if(xsdController.contains(uuid)){
+										response.setStatus(HTTPResponseStatus.S200);
+										response.putParameter("Content-Type", "application/xml");
+										response.setContent(xsdController.getContent(uuid));
+									}else{
+										response.setStatus(HTTPResponseStatus.S404);
+										response.setContent("Not Found");
+									}
+								}else{
+									StringBuilder res = buildHTMLBase();
+
+									// xsd list
+									for(String thisUuid : xsdController.getData().list()){
+										buildUuidList(res, "xsd", thisUuid, port);
+									}
+
+									// close HTML
+									buildHTMLClose(res);
+
+									response.setStatus(HTTPResponseStatus.S200);
+									response.setContent(res.toString());
+								}
+								
 							}else{
 								response.setStatus(HTTPResponseStatus.S400);
 								response.setContent("Bad Request");
@@ -129,30 +178,63 @@ public class ServiceThread implements Runnable {
 						case POST:
 						
 							if (request.getResourceParameters().containsKey("html")){
+								
 								String newUuid = htmlController.getData().create(request.getResourceParameters().get("html"));
-								StringBuilder aux = new StringBuilder();
 
-								// HTML base
-								aux.append("<!DOCTYPE html>")
-									.append("<html lang=\"es\">")
-										.append("<head>")
-											.append("<meta charset=\"utf-8\"/>")
-											.append("<title>Hybrid Server</title>")
-										.append("</head>")
-										.append("<body>")
-											.append("<h1>Hybrid Server</h1>")
-											.append("<ol>");
-
-								// HTML content
-								aux.append("<li> <a href=\"html?uuid=").append(newUuid).append("\">").append(newUuid).append("</a> </li>");
-
-								// HTML close
-								aux.append("</ol>")
-									.append("</body>")
-										.append("</html>");
+								// HTML
+								StringBuilder res = buildHTMLBase();
+								buildUuidEntry(res, "html", newUuid);
+								buildHTMLClose(res);
 
 								response.setStatus(HTTPResponseStatus.S200);
-								response.setContent(aux.toString());
+								response.setContent(res.toString());
+
+							}else if(request.getResourceParameters().containsKey("xml")){
+
+								String newUuid = UUID.randomUUID().toString();
+								xmlController.getData().create(newUuid, request.getResourceParameters().get("xml"));
+
+								StringBuilder res = buildHTMLBase();
+								buildUuidEntry(res, "xml", newUuid);
+								buildHTMLClose(res);
+
+								response.setStatus(HTTPResponseStatus.S200);
+								response.setContent(res.toString());
+
+							}else if(request.getResourceParameters().containsKey("xslt")){
+
+								String newUuid = UUID.randomUUID().toString();
+								String xsdUuid = request.getResourceParameters().get("xsd");
+
+								if(xsdUuid != null){
+									if(xsdController.contains(xsdUuid)){
+										xsltController.getData().create(newUuid, request.getResourceParameters().get("xslt"), xsdUuid);
+										StringBuilder res = buildHTMLBase();
+										buildUuidEntry(res, "xslt", newUuid);
+										buildHTMLClose(res);
+
+										response.setStatus(HTTPResponseStatus.S200);
+										response.setContent(res.toString());
+									}else{
+										response.setStatus(HTTPResponseStatus.S404);
+										response.setContent("Not Found");
+									}
+								}else{
+									response.setStatus(HTTPResponseStatus.S400);
+									response.setContent("Bad Request");
+								}
+							}else if(request.getResourceParameters().containsKey("xsd")){
+
+								String newUuid = UUID.randomUUID().toString();
+								xsdController.getData().create(newUuid, request.getResourceParameters().get("xsd"));
+
+								StringBuilder res = buildHTMLBase();
+								buildUuidEntry(res, "xsd", newUuid);
+								buildHTMLClose(res);
+
+								response.setStatus(HTTPResponseStatus.S200);
+								response.setContent(res.toString());
+
 							}else{
 								response.setStatus(HTTPResponseStatus.S400);
 								response.setContent("Bad Request");
@@ -166,6 +248,15 @@ public class ServiceThread implements Runnable {
 							String uuid = request.getResourceParameters().get("uuid");
 							if(htmlController.contains(uuid)){
 								htmlController.getData().delete(uuid);
+								response.setStatus(HTTPResponseStatus.S200);
+							}else if(xmlController.contains(uuid)){
+								xmlController.getData().delete(uuid);
+								response.setStatus(HTTPResponseStatus.S200);
+							}else if(xsltController.contains(uuid)){
+								xsltController.getData().delete(uuid);
+								response.setStatus(HTTPResponseStatus.S200);
+							}else if(xsdController.contains(uuid)){
+								xsdController.getData().delete(uuid);
 								response.setStatus(HTTPResponseStatus.S200);
 							}else{
 								// UUID not found
@@ -210,5 +301,37 @@ public class ServiceThread implements Runnable {
 										.append("Autor: Pedro Jalda Fonseca.")
 										.append("</body>").append("</html>");
 		return aux.toString();
+	}
+
+	public StringBuilder buildHTMLBase(){
+		StringBuilder res = new StringBuilder();
+									
+		// HTML base
+		res.append("<!DOCTYPE html>")
+			.append("<html lang=\"es\">")
+				.append("<head>")
+					.append("<meta charset=\"utf-8\"/>")
+					.append("<title>Hybrid Server</title>")
+				.append("</head>")
+				.append("<body>")
+					.append("<h1>UUID List Hybrid Server</h1>")
+					.append("<ol>");
+
+		return res;
+	}
+
+	public void buildUuidList(StringBuilder base, String type, String uuid, int port){
+		base.append("<li><a href=\"http://localhost:").append(port)
+					.append("/").append(type).append("?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
+	}
+
+	public void buildUuidEntry(StringBuilder base, String type, String uuid){
+		base.append("<li> <a href=\"").append(type).append("?uuid=").append(uuid).append("\">").append(uuid).append("</a> </li>");
+	}
+
+	public void buildHTMLClose(StringBuilder base){
+		base.append("</ol>")
+			.append("</body>")
+		.append("</html>");
 	}
 }
