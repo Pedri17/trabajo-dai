@@ -15,11 +15,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package es.uvigo.esei.dai.hybridserver.xml;
+package es.uvigo.esei.dai.hybridserver;
 
 import java.io.Reader;
-
-import es.uvigo.esei.dai.hybridserver.Configuration;
 
 public class XMLConfigurationLoader {
   public Configuration load(Reader reader) throws Exception {

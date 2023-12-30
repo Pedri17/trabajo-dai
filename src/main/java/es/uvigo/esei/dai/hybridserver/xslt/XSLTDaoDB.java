@@ -92,15 +92,15 @@ public class XSLTDaoDB implements XSLTDao {
     }
 
     @Override
-    public String create(String content, String xslt, String xsd) {
+    public String create(String contentXslt, String xsdUuid) {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
             String sql = "INSERT INTO XSLT (uuid, content, xsd) VALUES (?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, uuid);
-                preparedStatement.setString(2, xslt);
-                preparedStatement.setString(3, xsd);
+                preparedStatement.setString(2, contentXslt);
+                preparedStatement.setString(3, xsdUuid);
                 preparedStatement.executeUpdate();
             }
             return uuid;

@@ -6,5 +6,5 @@ public interface XSDDao {
 	String get(String uuid);
 	List<String> list();
 	void delete(String str);
-	String create(String uuid, String xsd);
+	String create(String xsdContent);
 }

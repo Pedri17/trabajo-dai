@@ -29,7 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import es.uvigo.esei.dai.hybridserver.xml.XMLConfigurationLoader;
+import es.uvigo.esei.dai.hybridserver.XMLConfigurationLoader;
 
 public class InvalidXMLConfigurationLoaderTest {
 	private XMLConfigurationLoader xmlConfiguration;

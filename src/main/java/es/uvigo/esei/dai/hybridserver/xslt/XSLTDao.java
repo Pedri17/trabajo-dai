@@ -7,5 +7,5 @@ public interface XSLTDao {
 	String getXsd(String uuid);
 	List<String> list();
 	void delete(String str);
-	String create(String uuid, String xslt, String xsd);
+	String create(String xsltContent, String xsdUuid);
 }

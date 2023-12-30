@@ -6,5 +6,5 @@ public interface XMLDao {
 	String get(String uuid);
 	List<String> list();
 	void delete(String str);
-	String create(String uuid, String xml);
+	String create(String xmlContent);
 }

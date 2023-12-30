@@ -35,7 +35,7 @@ public class XMLDaoDB implements XMLDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         return null;
@@ -43,20 +43,20 @@ public class XMLDaoDB implements XMLDao {
 
     @Override
     public List<String> list() {
-        List<String> htmlList = new ArrayList<>();
+        List<String> xmlList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT uuid FROM XML";
             try (Statement statement = connection.createStatement()) {
                 try (ResultSet resultSet = statement.executeQuery(sql)) {
                     while (resultSet.next()) {
-                        htmlList.add(resultSet.getString("uuid"));
+                        xmlList.add(resultSet.getString("uuid"));
                     }
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return htmlList;
+        return xmlList;
     }
 
     @Override
@@ -68,26 +68,25 @@ public class XMLDaoDB implements XMLDao {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String create(String content, String xml) {
+    public String create(String xmlContent) {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
             String sql = "INSERT INTO XML (uuid, content) VALUES (?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, uuid);
-                preparedStatement.setString(2, xml);
+                preparedStatement.setString(2, xmlContent);
                 preparedStatement.executeUpdate();
             }
             return uuid;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     private String generateUUID() {
@@ -111,7 +110,7 @@ public class XMLDaoDB implements XMLDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return false;
     }

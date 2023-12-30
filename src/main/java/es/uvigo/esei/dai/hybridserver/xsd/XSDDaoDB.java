@@ -73,14 +73,14 @@ public class XSDDaoDB implements XSDDao {
     }
 
     @Override
-    public String create(String content, String xsd) {
+    public String create(String xsdContent) {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
             String sql = "INSERT INTO XSD (uuid, content) VALUES (?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, uuid);
-                preparedStatement.setString(2, xsd);
+                preparedStatement.setString(2, xsdContent);
                 preparedStatement.executeUpdate();
             }
             return uuid;

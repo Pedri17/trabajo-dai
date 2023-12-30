@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import es.uvigo.esei.dai.hybridserver.Configuration;
 import es.uvigo.esei.dai.hybridserver.ServerConfiguration;
-import es.uvigo.esei.dai.hybridserver.xml.XMLConfigurationLoader;
+import es.uvigo.esei.dai.hybridserver.XMLConfigurationLoader;
 
 public class XMLConfigurationLoaderTest {
 	private XMLConfigurationLoader xmlConfiguration;
