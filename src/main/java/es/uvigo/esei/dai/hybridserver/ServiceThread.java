@@ -5,8 +5,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.net.Socket;
 import java.util.UUID;
+
+import org.xml.sax.SAXException;
 
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
@@ -95,18 +98,34 @@ public class ServiceThread implements Runnable {
 								String uuidXslt = request.getResourceParameters().get("xslt");
 
 								if(uuidXml != null){
+									// Request message has a uuid field
 									if(uuidXslt != null){
-										// Request message has a uuid field
-										// TODO: Hacer validación y transformación
-										// Search xslt uuid
+										// Request message has a xslt field
 										if(xsltController.contains(uuidXslt)){
 											// xslt found
 											String uuidXsd = xsltController.getXsd(uuidXslt);
-											if(xsdController.contains(uuidXsd)){
+
+											if(xsdController.contains(uuidXsd)){ 
 												// xsd found
-												response.setStatus(HTTPResponseStatus.S200);
-												response.putParameter("Content-Type", "application/xml");
-												response.setContent(xmlController.getContent(uuidXml));
+												
+												String xmlContent = xmlController.getContent(uuidXml);
+												String xsdContent = xsdController.getContent(uuidXsd);
+												String xsltContent = xsltController.getContent(uuidXslt);
+
+												try{
+													XMLConfigurationLoader.parseAndValidateWithExternalXSD(
+														xmlContent,
+														xsdContent, 
+														null
+													);
+													response.putParameter("Content-Type", "text/html");
+													response.setStatus(HTTPResponseStatus.S200);
+													response.setContent(XMLConfigurationLoader.transformXMLwithXSLT(xmlContent, xsltContent));
+												}catch(SAXException e){
+													System.out.println("Validating error");
+													response.setStatus(HTTPResponseStatus.S400);
+													response.setContent("XML does not validate XSD");
+												}
 											}else{
 												// xsd not found
 												response.setStatus(HTTPResponseStatus.S404);

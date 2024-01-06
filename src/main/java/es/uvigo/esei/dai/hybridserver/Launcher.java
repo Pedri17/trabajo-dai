@@ -26,7 +26,7 @@ public class Launcher {
     }else if(args.length==1){
       File configurationFile = new File(args[0]);
       ConfigurationController configController = new ConfigurationController(configurationFile);
-      new HybridServer(configController.getProperties()).start();
+      new HybridServer().start();
     }else{
       System.err.println("Error, has tratado de iniciar la aplicación servidor con más de un parámetro de configuración.");
     }

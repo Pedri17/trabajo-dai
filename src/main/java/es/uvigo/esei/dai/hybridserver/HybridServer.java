@@ -20,6 +20,7 @@ package es.uvigo.esei.dai.hybridserver;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -29,18 +30,24 @@ import java.util.concurrent.TimeUnit;
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.html.HTMLDaoDB;
 import es.uvigo.esei.dai.hybridserver.html.HTMLDaoMap;
+import es.uvigo.esei.dai.hybridserver.webservice.WebServiceController;
 import es.uvigo.esei.dai.hybridserver.xml.XMLController;
 import es.uvigo.esei.dai.hybridserver.xml.XMLDaoDB;
 import es.uvigo.esei.dai.hybridserver.xsd.XSDController;
 import es.uvigo.esei.dai.hybridserver.xsd.XSDDaoDB;
 import es.uvigo.esei.dai.hybridserver.xslt.XSLTController;
 import es.uvigo.esei.dai.hybridserver.xslt.XSLTDaoDB;
+import jakarta.xml.ws.Endpoint;
 
 public class HybridServer implements AutoCloseable {
   private int servicePort = 8888;
   private int maxClients = 10;
   private Thread serverThread;
   private boolean stop;
+
+  private String dbURL, dbUser, dbPassword, wsURL;
+  private List<ServerConfiguration> servers;
+  private Endpoint endpoint;
 
   private ExecutorService threadPool;
 
@@ -58,21 +65,23 @@ public class HybridServer implements AutoCloseable {
   
   public HybridServer() {
     this.stop = false;
+    Configuration config = new Configuration();
 
-    Properties properties = new ConfigurationController().getProperties();
-
-    servicePort = Integer.parseInt(properties.getProperty("port"));
-    maxClients = Integer.parseInt(properties.getProperty("numClients"));
-
-    String user = properties.getProperty("db.user");
-    String password = properties.getProperty("db.password");
-    String url = properties.getProperty("db.url");
-    initControllers(user, password, url);
+    this.servicePort = config.getHttpPort();
+    this.maxClients = config.getNumClients();
+    this.servers = config.getServers();
+    
+    this.wsURL = config.getWebServiceURL();
+    this.dbUser = config.getDbUser();
+    this.dbPassword = config.getDbPassword();
+    this.dbURL = config.getDbURL();
+    initControllers(dbUser, dbPassword, dbURL);
     
     System.out.println("Server launched without any parameters.");
   }
   
   public HybridServer(Map<String, String> pages) {
+    // Hasta dónde sé ya no está en uso
     this.stop = false;
     htmlController = new HTMLController(new HTMLDaoMap(pages));
 
@@ -87,29 +96,33 @@ public class HybridServer implements AutoCloseable {
   public HybridServer(Configuration config){
     this.stop = false;
 
-    servicePort = config.getHttpPort();
-    maxClients = config.getNumClients();
+    this.servicePort = config.getHttpPort();
+    this.maxClients = config.getNumClients();
+    this.servers = config.getServers();
     
-    String user = config.getDbUser();
-    String password = config.getDbPassword();
-    String url = config.getDbURL();
-    initControllers(user, password, url);
+    this.wsURL = config.getWebServiceURL();
+    this.dbUser = config.getDbUser();
+    this.dbPassword = config.getDbPassword();
+    this.dbURL = config.getDbURL();
+    initControllers(dbUser, dbPassword, dbURL);
 
-    initControllers(user, password, url);
-
-    System.out.println("Server launched with condifuration");
+    System.out.println("Server launched with configuration");
   }
 
   public HybridServer(Properties properties) {
     this.stop = false;
 
-    servicePort = Integer.parseInt(properties.getProperty("port"));
-    maxClients = Integer.parseInt(properties.getProperty("numClients"));
+    Configuration config = new Configuration();
 
-    String user = properties.getProperty("db.user");
-    String password = properties.getProperty("db.password");
-    String url = properties.getProperty("db.url");
-    initControllers(user, password, url);
+    this.servicePort = Integer.parseInt(properties.getProperty("port"));
+    this.maxClients = Integer.parseInt(properties.getProperty("numClients"));
+    this.servers = config.getServers();
+
+    this.wsURL = config.getWebServiceURL();
+    this.dbUser = properties.getProperty("db.user");
+    this.dbPassword = properties.getProperty("db.password");
+    this.dbURL = properties.getProperty("db.url");
+    initControllers(dbUser, dbPassword, dbURL);
 
     System.out.println("Server lauched with properities parameter.");
   }
@@ -126,6 +139,17 @@ public class HybridServer implements AutoCloseable {
     	  
         try (final ServerSocket serverSocket = new ServerSocket(servicePort)) {
           threadPool = Executors.newFixedThreadPool(maxClients);
+
+          // Publish webservice endPoints
+          try{
+            endpoint = Endpoint.publish(wsURL, 
+              new WebServiceController(htmlController, xmlController, xsdController, xsltController)
+            );
+            endpoint.setExecutor(threadPool);
+          }catch(Exception e){
+            e.printStackTrace();
+          }
+
         	
         	while (true) {
         		Socket socket = serverSocket.accept();
@@ -147,6 +171,11 @@ public class HybridServer implements AutoCloseable {
   @Override
   public void close() {
     this.stop = true;
+
+    if (endpoint!=null){
+      endpoint.stop();
+      System.out.println("Web Services stopped.");
+    } 
 
     try (Socket socket = new Socket("localhost", servicePort)) {
       // Esta conexión se hace, simplemente, para "despertar" el hilo servidor
