@@ -45,7 +45,7 @@ public class HybridServer implements AutoCloseable {
   private Thread serverThread;
   private boolean stop;
 
-  private String dbURL, dbUser, dbPassword, wsURL;
+  private String dbUrl, dbUser, dbPassword, wsUrl;
   private List<ServerConfiguration> servers;
   private Endpoint endpoint;
 
@@ -71,11 +71,11 @@ public class HybridServer implements AutoCloseable {
     this.maxClients = config.getNumClients();
     this.servers = config.getServers();
     
-    this.wsURL = config.getWebServiceURL();
+    this.wsUrl = config.getWebServiceURL();
     this.dbUser = config.getDbUser();
     this.dbPassword = config.getDbPassword();
-    this.dbURL = config.getDbURL();
-    initControllers(dbUser, dbPassword, dbURL);
+    this.dbUrl = config.getDbURL();
+    initControllers(dbUser, dbPassword, dbUrl);
     
     System.out.println("Server launched without any parameters.");
   }
@@ -100,11 +100,11 @@ public class HybridServer implements AutoCloseable {
     this.maxClients = config.getNumClients();
     this.servers = config.getServers();
     
-    this.wsURL = config.getWebServiceURL();
+    this.wsUrl = config.getWebServiceURL();
     this.dbUser = config.getDbUser();
     this.dbPassword = config.getDbPassword();
-    this.dbURL = config.getDbURL();
-    initControllers(dbUser, dbPassword, dbURL);
+    this.dbUrl = config.getDbURL();
+    initControllers(dbUser, dbPassword, dbUrl);
 
     System.out.println("Server launched with configuration");
   }
@@ -118,11 +118,11 @@ public class HybridServer implements AutoCloseable {
     this.maxClients = Integer.parseInt(properties.getProperty("numClients"));
     this.servers = config.getServers();
 
-    this.wsURL = config.getWebServiceURL();
+    this.wsUrl = config.getWebServiceURL();
     this.dbUser = properties.getProperty("db.user");
     this.dbPassword = properties.getProperty("db.password");
-    this.dbURL = properties.getProperty("db.url");
-    initControllers(dbUser, dbPassword, dbURL);
+    this.dbUrl = properties.getProperty("db.url");
+    initControllers(dbUser, dbPassword, dbUrl);
 
     System.out.println("Server lauched with properities parameter.");
   }
@@ -142,7 +142,7 @@ public class HybridServer implements AutoCloseable {
 
           // Publish webservice endPoints
           try{
-            endpoint = Endpoint.publish(wsURL, 
+            endpoint = Endpoint.publish(wsUrl, 
               new WebServiceController(htmlController, xmlController, xsdController, xsltController)
             );
             endpoint.setExecutor(threadPool);
@@ -155,7 +155,7 @@ public class HybridServer implements AutoCloseable {
         		Socket socket = serverSocket.accept();
         		if (stop) 
               break;
-        		threadPool.execute(new ServiceThread(socket, htmlController, xmlController, xsdController, xsltController));
+        		threadPool.execute(new ServiceThread(socket, htmlController, xmlController, xsdController, xsltController, servers));
         	}
 
         } catch (IOException e) {

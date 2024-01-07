@@ -5,9 +5,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.StringReader;
 import java.net.Socket;
-import java.util.UUID;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.xml.sax.SAXException;
 
@@ -16,6 +16,8 @@ import es.uvigo.esei.dai.hybridserver.http.HTTPHeaders;
 import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResponseStatus;
+import es.uvigo.esei.dai.hybridserver.webservice.WebServiceConnect;
+import es.uvigo.esei.dai.hybridserver.webservice.WebServiceDao;
 import es.uvigo.esei.dai.hybridserver.xml.XMLController;
 import es.uvigo.esei.dai.hybridserver.xsd.XSDController;
 import es.uvigo.esei.dai.hybridserver.xslt.XSLTController;
@@ -29,12 +31,16 @@ public class ServiceThread implements Runnable {
   	private XMLController xmlController;
   	private XSDController xsdController;
   	private XSLTController xsltController;
+
+	private List<ServerConfiguration> servers;
 	
 	public ServiceThread(Socket socket, HTMLController htmlController, XMLController xmlController, 
-						XSDController xsdController, XSLTController xsltController) {
+						XSDController xsdController, XSLTController xsltController, List<ServerConfiguration> servers) {
 		this.socket = socket;
 		this.response = new HTTPResponse();
 		this.response.setVersion(HTTPHeaders.HTTP_1_1.getHeader());
+					
+		this.servers = servers;
 
 		this.htmlController = htmlController;
 		this.xmlController = xmlController;
@@ -73,20 +79,9 @@ public class ServiceThread implements Runnable {
 										response.setContent("Not Found");
 									}
 								}else{
-									// Request message has no a uuid field
-									StringBuilder res = buildHTMLBase();
-									
-									// Add uuid list to HTML
-									for(String uuid : htmlController.getData().list()){
-										buildUuidList(res, "html", uuid, port);
-									}
-
-									// HTML close
-									buildHTMLClose(res);
-
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(res.toString());
+									response.setContent(buildUuidListHTML("html", port).toString());
 								}
 							} else if (request.getResourceChain().equals("/")) {
 								// Wellcome page
@@ -149,20 +144,9 @@ public class ServiceThread implements Runnable {
 										}
 									}
 								}else{
-									// Request message has no a uuid field
-									StringBuilder res = buildHTMLBase();
-									
-									// Add uuid list to HTML
-									for(String uuid : xmlController.getData().list()){
-										buildUuidList(res, "xml", uuid, port);
-									}
-
-									// HTML close
-									buildHTMLClose(res);
-
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(res.toString());
+									response.setContent(buildUuidListHTML("type", port).toString());
 								}
 								
 								
@@ -181,20 +165,9 @@ public class ServiceThread implements Runnable {
 										response.setContent("Not Found");
 									}
 								}else{
-									// Request message has not a uuid field
-									StringBuilder res = buildHTMLBase();
-
-									// xslt list
-									for(String thisUuid : xsltController.getData().list()){
-										buildUuidList(res, "xslt", thisUuid, port);
-									}
-
-									// close HTML
-									buildHTMLClose(res);
-
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(res.toString());
+									response.setContent(buildUuidListHTML("xslt", port).toString());
 								}
 
 							}else if(request.getResourceName().equals("xsd")){
@@ -210,19 +183,9 @@ public class ServiceThread implements Runnable {
 										response.setContent("Not Found");
 									}
 								}else{
-									StringBuilder res = buildHTMLBase();
-
-									// xsd list
-									for(String thisUuid : xsdController.getData().list()){
-										buildUuidList(res, "xsd", thisUuid, port);
-									}
-
-									// close HTML
-									buildHTMLClose(res);
-
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(res.toString());
+									response.setContent(buildUuidListHTML("xsd", port).toString());
 								}
 								
 							}else{
@@ -384,7 +347,7 @@ public class ServiceThread implements Runnable {
 		return res;
 	}
 
-	public void buildUuidList(StringBuilder base, String type, String uuid, int port){
+	public void buildUuidListEntry(StringBuilder base, String type, String uuid, int port){
 		base.append("<li><a href=\"http://localhost:").append(port)
 					.append("/").append(type).append("?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
 	}
@@ -397,5 +360,62 @@ public class ServiceThread implements Runnable {
 		base.append("</ol>")
 			.append("</body>")
 		.append("</html>");
+	}
+
+	public void buildExternalUuids(StringBuilder res, String type, int port){
+		// Get external uuids
+		for(WebServiceDao ws: WebServiceConnect.connect(servers)){
+			List<String> list = new LinkedList<>();
+			switch(type){
+				case "html":
+					list = ws.listHTML();
+					break;
+				case "xml":
+					list = ws.listHTML();
+					break;
+				case "xsd":
+					list = ws.listXSD();
+					break;
+				case "xslt":
+					list = ws.listXSLT();
+					break;
+			}
+			for(String thisUuid: list){
+				buildUuidListEntry(res, type, thisUuid, port);
+			}
+		}
+	}
+
+	public StringBuilder buildUuidListHTML(String type, int port){
+		// Request message has no a uuid field
+		StringBuilder res = buildHTMLBase();
+		List<String> uuidList = new LinkedList<>();;
+
+		switch(type){
+			case "html":
+				uuidList = htmlController.getData().list();
+				break;
+			case "xml":
+				uuidList = xmlController.getData().list();
+				break;
+			case "xsd":
+				uuidList = xsdController.getData().list();
+				break;
+			case "xslt":
+				uuidList = htmlController.getData().list();
+				break;
+		}
+		
+		// Add uuid list to HTML
+		for(String uuid : uuidList){
+			buildUuidListEntry(res, type, uuid, port);
+		}
+
+		buildExternalUuids(res, type, port);
+
+		// HTML close
+		buildHTMLClose(res);
+
+		return res;
 	}
 }

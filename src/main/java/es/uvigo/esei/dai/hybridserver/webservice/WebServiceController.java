@@ -45,32 +45,27 @@ public class WebServiceController implements WebServiceDao {
 
     @Override
     public String getXSLT(String uuid) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getXSLT'");
+        return xsltController.getContent(uuid);
     }
 
     @Override
     public List<String> listHTML() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listHTML'");
+        return htmlController.getData().list();
     }
 
     @Override
     public List<String> listXML() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listXML'");
+        return xmlController.getData().list();
     }
 
     @Override
     public List<String> listXSD() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listXSD'");
+        return xsdController.getData().list();
     }
 
     @Override
     public List<String> listXSLT() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listXSLT'");
+        return xsltController.getData().list();
     }
     
 }
