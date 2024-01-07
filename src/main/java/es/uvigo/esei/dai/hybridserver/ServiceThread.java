@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -66,13 +67,13 @@ public class ServiceThread implements Runnable {
 								String requestUuid = request.getResourceParameters().get("uuid");
 								// Request message has a uuid field
 								if (requestUuid != null){
-									if (htmlController.contains(requestUuid)){
+									String htmlContent = getContentIfExists(requestUuid, FileType.HTML);
+									
+									if (htmlContent != null){
 										// Known uuid
-										String uuidContent = htmlController.getContent(requestUuid);
-										
 										response.setStatus(HTTPResponseStatus.S200);
 										response.putParameter("Content-Type", "text/html");
-										response.setContent(uuidContent);
+										response.setContent(htmlContent);
 									}else{
 										// Unknown uuid
 										response.setStatus(HTTPResponseStatus.S404);
@@ -81,7 +82,7 @@ public class ServiceThread implements Runnable {
 								}else{
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(buildUuidListHTML("html", port).toString());
+									response.setContent(buildUuidListHTML(FileType.HTML, port).toString());
 								}
 							} else if (request.getResourceChain().equals("/")) {
 								// Wellcome page
@@ -91,75 +92,76 @@ public class ServiceThread implements Runnable {
 							}else if(request.getResourceName().equals("xml")){
 								String uuidXml = request.getResourceParameters().get("uuid");
 								String uuidXslt = request.getResourceParameters().get("xslt");
+								String xmlContent = getContentIfExists(uuidXml, FileType.XML);
 
 								if(uuidXml != null){
 									// Request message has a uuid field
-									if(uuidXslt != null){
-										// Request message has a xslt field
-										if(xsltController.contains(uuidXslt)){
-											// xslt found
-											String uuidXsd = xsltController.getXsd(uuidXslt);
+									if(xmlContent != null){
+										// xml content exists
+										if(uuidXslt != null){
+											// Request message has a xslt field
+											String xsltContent = getContentIfExists(uuidXslt, FileType.XSLT);
 
-											if(xsdController.contains(uuidXsd)){ 
-												// xsd found
-												
-												String xmlContent = xmlController.getContent(uuidXml);
-												String xsdContent = xsdController.getContent(uuidXsd);
-												String xsltContent = xsltController.getContent(uuidXslt);
+											if(xsltContent != null){
+												// xslt found
+												String uuidXsd = getAssociatedXSDfromXSLT(uuidXslt);
+												String xsdContent = getContentIfExists(uuidXsd, FileType.XSD);
 
-												try{
-													XMLConfigurationLoader.parseAndValidateWithExternalXSD(
-														xmlContent,
-														xsdContent, 
-														null
-													);
-													response.putParameter("Content-Type", "text/html");
-													response.setStatus(HTTPResponseStatus.S200);
-													response.setContent(XMLConfigurationLoader.transformXMLwithXSLT(xmlContent, xsltContent));
-												}catch(SAXException e){
-													System.out.println("Validating error");
-													response.setStatus(HTTPResponseStatus.S400);
-													response.setContent("XML does not validate XSD");
+												if(xsdContent != null){ 
+													// xsd found
+													try{
+														XMLConfigurationLoader.parseAndValidateWithExternalXSD(
+															xmlContent,
+															xsdContent, 
+															null
+														);
+														response.putParameter("Content-Type", "text/html");
+														response.setStatus(HTTPResponseStatus.S200);
+														response.setContent(XMLConfigurationLoader.transformXMLwithXSLT(xmlContent, xsltContent));
+													}catch(SAXException e){
+														System.out.println("Validating error");
+														response.setStatus(HTTPResponseStatus.S500);
+														response.setContent("XML does not validate XSD");
+													}
+												}else{
+													// xsd not found
+													response.setStatus(HTTPResponseStatus.S404);
+													response.setContent("Not Found");
 												}
 											}else{
-												// xsd not found
+												// xslt not found
 												response.setStatus(HTTPResponseStatus.S404);
 												response.setContent("Not Found");
 											}
 										}else{
-											// xslt not found
-											response.setStatus(HTTPResponseStatus.S404);
-											response.setContent("Not Found");
-										}
-									}else{
-										// There's not xslt, returns xml content
-										if(xmlController.contains(uuidXml)){
+											// There's not xslt, returns xml content
 											response.setStatus(HTTPResponseStatus.S200);
 											response.putParameter("Content-Type", "application/xml");
-											response.setContent(xmlController.getContent(uuidXml));
-										}else{
-											// Unknown uuid
-											response.setStatus(HTTPResponseStatus.S404);
-											response.setContent("Not Found");
+											response.setContent(xmlContent);
 										}
+									}else{
+										// xml not found
+										response.setStatus(HTTPResponseStatus.S404);
+										response.setContent("Not Found");
 									}
 								}else{
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(buildUuidListHTML("type", port).toString());
+									response.setContent(buildUuidListHTML(FileType.XML, port).toString());
 								}
 								
 								
 							}else if(request.getResourceName().equals("xslt")){
-
 								String uuid = request.getResourceParameters().get("uuid");
 
 								if(uuid != null){
 									// Request message has a uuid field
-									if(xsltController.contains(uuid)){
+									String xsltContent = getContentIfExists(uuid, FileType.XSLT);
+
+									if(xsltContent != null){
 										response.setStatus(HTTPResponseStatus.S200);
 										response.putParameter("Content-Type", "application/xml");
-										response.setContent(xsltController.getContent(uuid));
+										response.setContent(xsltContent);
 									}else{
 										response.setStatus(HTTPResponseStatus.S404);
 										response.setContent("Not Found");
@@ -167,17 +169,20 @@ public class ServiceThread implements Runnable {
 								}else{
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(buildUuidListHTML("xslt", port).toString());
+									System.out.println("BUILDEAR LISTA CON XSLT");
+									response.setContent(buildUuidListHTML(FileType.XSLT, port).toString());
 								}
 
 							}else if(request.getResourceName().equals("xsd")){
 
 								String uuid = request.getResourceParameters().get("uuid");
 								if(uuid != null){
-									if(xsdController.contains(uuid)){
+									String xsdContent = getContentIfExists(uuid, FileType.XSD);
+
+									if(xsdContent != null){
 										response.setStatus(HTTPResponseStatus.S200);
 										response.putParameter("Content-Type", "application/xml");
-										response.setContent(xsdController.getContent(uuid));
+										response.setContent(xsdContent);
 									}else{
 										response.setStatus(HTTPResponseStatus.S404);
 										response.setContent("Not Found");
@@ -185,7 +190,7 @@ public class ServiceThread implements Runnable {
 								}else{
 									response.setStatus(HTTPResponseStatus.S200);
 									response.putParameter("Content-Type", "text/html");
-									response.setContent(buildUuidListHTML("xsd", port).toString());
+									response.setContent(buildUuidListHTML(FileType.XSD, port).toString());
 								}
 								
 							}else{
@@ -265,6 +270,7 @@ public class ServiceThread implements Runnable {
 						
 							// UUID is on the data structure
 							String uuid = request.getResourceParameters().get("uuid");
+
 							if(htmlController.contains(uuid)){
 
 								htmlController.getData().delete(uuid);
@@ -304,6 +310,9 @@ public class ServiceThread implements Runnable {
 					response.setContent("Internal Server Error");
 					e.printStackTrace();
 				}finally{
+					System.out.println("-----RESPONSE-------");
+					System.out.println(response.toString());
+					System.out.println("--------------------");
 					try(BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))){
 						response.print(writer);
 					}catch(IOException e){
@@ -319,6 +328,8 @@ public class ServiceThread implements Runnable {
 		}
 		
 	}
+
+	// BUILD HTML
 
 	public String buildWelcomePage(){
 		StringBuilder aux = new StringBuilder();
@@ -347,9 +358,9 @@ public class ServiceThread implements Runnable {
 		return res;
 	}
 
-	public void buildUuidListEntry(StringBuilder base, String type, String uuid, int port){
+	public void buildUuidListEntry(StringBuilder base, FileType type, String uuid, int port){
 		base.append("<li><a href=\"http://localhost:").append(port)
-					.append("/").append(type).append("?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
+					.append("/").append(type.getType()).append("?uuid=").append(uuid).append("\">").append(uuid).append("</a></li>");
 	}
 
 	public void buildUuidEntry(StringBuilder base, String type, String uuid){
@@ -362,47 +373,32 @@ public class ServiceThread implements Runnable {
 		.append("</html>");
 	}
 
-	public void buildExternalUuids(StringBuilder res, String type, int port){
+	public void buildExternalUuids(StringBuilder res, FileType type, int port){
 		// Get external uuids
 		for(WebServiceDao ws: WebServiceConnect.connect(servers)){
-			List<String> list = new LinkedList<>();
-			switch(type){
-				case "html":
-					list = ws.listHTML();
-					break;
-				case "xml":
-					list = ws.listHTML();
-					break;
-				case "xsd":
-					list = ws.listXSD();
-					break;
-				case "xslt":
-					list = ws.listXSLT();
-					break;
-			}
-			for(String thisUuid: list){
+			for(String thisUuid: ws.list(type)){
 				buildUuidListEntry(res, type, thisUuid, port);
 			}
 		}
 	}
 
-	public StringBuilder buildUuidListHTML(String type, int port){
+	public StringBuilder buildUuidListHTML(FileType type, int port){
 		// Request message has no a uuid field
 		StringBuilder res = buildHTMLBase();
 		List<String> uuidList = new LinkedList<>();;
 
 		switch(type){
-			case "html":
-				uuidList = htmlController.getData().list();
+			case HTML:
+				uuidList = htmlController.list();
 				break;
-			case "xml":
-				uuidList = xmlController.getData().list();
+			case XML:
+				uuidList = xmlController.list();
 				break;
-			case "xsd":
-				uuidList = xsdController.getData().list();
+			case XSD:
+				uuidList = xsdController.list();
 				break;
-			case "xslt":
-				uuidList = htmlController.getData().list();
+			case XSLT:
+				uuidList = xsltController.list();
 				break;
 		}
 		
@@ -418,4 +414,41 @@ public class ServiceThread implements Runnable {
 
 		return res;
 	}
+
+	// EXTERNAL SERVERS
+
+	public String getContentIfExists(String uuid, FileType type){
+		ControllerInterface controller = null;
+		switch(type){
+			case HTML:
+				controller = htmlController;
+				break;
+			case XML:
+				controller = xmlController;
+				break;
+			case XSLT:
+				controller = xsltController;
+				break;
+			case XSD:
+				controller = xsdController;
+				break;
+		}
+
+		String content = controller.getContent(uuid);
+		Iterator<WebServiceDao> iWebservices = (WebServiceConnect.connect(servers)).iterator();
+		while(content == null && iWebservices.hasNext()){
+			content = iWebservices.next().get(type, uuid);
+		}
+		return content;
+	}
+
+	public String getAssociatedXSDfromXSLT(String uuid){
+		String uuidXsd = xsltController.getXsd(uuid);
+		Iterator<WebServiceDao> iWebservices = (WebServiceConnect.connect(servers)).iterator();
+		while(uuidXsd == null && iWebservices.hasNext()){
+			uuidXsd = iWebservices.next().getAssociatedXSD(uuid);
+		}
+		return uuidXsd;
+	}
+	
 }

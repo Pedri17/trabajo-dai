@@ -112,13 +112,13 @@ extends MultipleServersTestCase {
 		final String[] xmls = CT_XMLS;
 		final String[] xslts = CT_INVALID_XSLTS;
 		
-		testMultipleErrorGets(xmls, xslts, 400, serverIndex);
 	}
 
 	protected void testMultipleGets(
 		final String[] xmls, final String[] xslts, final String[] expectedContents, final int serverIndex
 	) throws IOException {
-		for (int i = 0; i < xmls.length; i++) {
+		for (int i = 0; i < xmls.length; i++) {		testMultipleErrorGets(xmls, xslts, 400, serverIndex);
+
 			final String xmlUuid = xmls[i];
 			final String xsltUuid = xslts[i];
 			final String expectedContent = expectedContents[i];

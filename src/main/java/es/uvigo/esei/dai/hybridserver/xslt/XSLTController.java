@@ -1,6 +1,10 @@
 package es.uvigo.esei.dai.hybridserver.xslt;
 
-public class XSLTController {
+import java.util.List;
+
+import es.uvigo.esei.dai.hybridserver.ControllerInterface;
+
+public class XSLTController implements ControllerInterface {
 	private XSLTDao content;
 	
 	public XSLTController(XSLTDao contentStructure) {
@@ -13,6 +17,14 @@ public class XSLTController {
 
 	public String getContent(String uuid){
 		return content.getContent(uuid);
+	}
+
+	public List<String> list(){
+		return content.list();
+	}
+
+	public void delete(String uuid){
+		content.delete(uuid);
 	}
 
 	public String getXsd(String uuid){

@@ -2,13 +2,19 @@ package es.uvigo.esei.dai.hybridserver.webservice;
 
 import java.util.List;
 
+import es.uvigo.esei.dai.hybridserver.ControllerInterface;
+import es.uvigo.esei.dai.hybridserver.FileType;
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.xml.XMLController;
 import es.uvigo.esei.dai.hybridserver.xsd.XSDController;
 import es.uvigo.esei.dai.hybridserver.xslt.XSLTController;
 import jakarta.jws.WebService;
 
-@WebService(endpointInterface = "es.uvigo.esei.dai.hybridserver.webservice.WebServiceDao")
+@WebService(
+    endpointInterface = "es.uvigo.esei.dai.hybridserver.webservice.WebServiceDao",
+    serviceName = "HybridServerService",
+    targetNamespace = "http://hybridserver.dai.esei.uvigo.es/"
+)
 public class WebServiceController implements WebServiceDao {
 
     private HTMLController htmlController;
@@ -21,6 +27,56 @@ public class WebServiceController implements WebServiceDao {
         this.xmlController = xmlController;
         this.xsdController = xsdController;
         this.xsltController = xsltController;
+    }
+
+    @Override
+    public String get(FileType type, String uuid){
+        ControllerInterface controller = htmlController;
+        switch(type){
+            case HTML:
+                controller = htmlController;
+                break;
+            case XML:
+                controller = xmlController;
+                break;
+            case XSLT:
+                controller = xsltController;
+                break;
+            case XSD:
+                controller = xsdController;
+                break;
+        }
+        return controller.getContent(uuid);
+    }
+
+    @Override
+    public boolean contains(FileType type, String uuid){
+        return get(type, uuid) != null;
+    }
+
+    @Override
+    public boolean containsAssociatedXSD(String uuid){
+        return getAssociatedXSD(uuid) != null;
+    }
+
+    @Override
+    public List<String> list(FileType type){
+        ControllerInterface controller = htmlController;
+        switch(type){
+            case HTML:
+                controller = htmlController;
+                break;
+            case XML:
+                controller = xmlController;
+                break;
+            case XSLT:
+                controller = xsltController;
+                break;
+            case XSD:
+                controller = xsdController;
+                break;
+        }
+        return controller.list();
     }
     
     @Override

@@ -142,12 +142,13 @@ public class HybridServer implements AutoCloseable {
 
           // Publish webservice endPoints
           try{
-            endpoint = Endpoint.publish(wsUrl, 
+            endpoint = Endpoint.publish(
+              wsUrl, 
               new WebServiceController(htmlController, xmlController, xsdController, xsltController)
             );
             endpoint.setExecutor(threadPool);
           }catch(Exception e){
-            e.printStackTrace();
+            System.err.println("Endpoint publish error");
           }
 
         	

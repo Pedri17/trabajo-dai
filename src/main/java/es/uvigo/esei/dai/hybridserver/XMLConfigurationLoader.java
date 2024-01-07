@@ -93,6 +93,7 @@ public class XMLConfigurationLoader {
     xmlReader.setContentHandler(handler);
     xmlReader.setErrorHandler(new SimpleErrorHandler());
     // Parsing
+    if(xmlContent==null)System.out.println("EFECTIVAMENTE ES NULO");
     xmlReader.parse(new InputSource(new StringReader(xmlContent)));
   }
   
