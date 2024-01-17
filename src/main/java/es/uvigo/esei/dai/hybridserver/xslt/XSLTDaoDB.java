@@ -23,7 +23,7 @@ public class XSLTDaoDB implements XSLTDao {
 
     
     @Override
-    public String getContent(String uuid) {
+    public String getContent(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT content FROM XSLT WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -35,14 +35,14 @@ public class XSLTDaoDB implements XSLTDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+           throw e;
         }
 
         return null;
     }
 
     @Override
-    public String getXsd(String uuid) {
+    public String getXsd(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT xsd FROM XSLT WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -54,14 +54,14 @@ public class XSLTDaoDB implements XSLTDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+           throw e;
         }
 
         return null;
     }
 
     @Override
-    public List<String> list() {
+    public List<String> list() throws SQLException {
         List<String> htmlList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT uuid FROM XSLT";
@@ -73,13 +73,13 @@ public class XSLTDaoDB implements XSLTDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
         return htmlList;
     }
 
     @Override
-    public void delete(String uuid) {
+    public void delete(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "DELETE FROM XSLT WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -87,12 +87,12 @@ public class XSLTDaoDB implements XSLTDao {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
     }
 
     @Override
-    public String create(String contentXslt, String xsdUuid) {
+    public String create(String contentXslt, String xsdUuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
@@ -105,20 +105,23 @@ public class XSLTDaoDB implements XSLTDao {
             }
             return uuid;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
-        return null;
     }
 
-    private String generateUUID() {
+    private String generateUUID() throws SQLException {
         String uuid = null;
-        do {
-            uuid = UUID.randomUUID().toString();
-        } while (uuidExistsInDatabase(uuid));
+        try{
+            do {
+                uuid = UUID.randomUUID().toString();
+            } while (uuidExistsInDatabase(uuid));
+        }catch(SQLException e){
+            throw e;
+        }
         return uuid;
     }
 
-    private boolean uuidExistsInDatabase(String uuid) {
+    private boolean uuidExistsInDatabase(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT COUNT(*) FROM XSLT WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -131,7 +134,7 @@ public class XSLTDaoDB implements XSLTDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
         return false;
     }

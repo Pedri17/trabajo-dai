@@ -18,6 +18,9 @@
 package es.uvigo.esei.dai.hybridserver;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 public class Launcher {
   public static void main(String[] args) {
@@ -25,10 +28,15 @@ public class Launcher {
       new HybridServer().start();
     }else if(args.length==1){
       File configurationFile = new File(args[0]);
-      ConfigurationController configController = new ConfigurationController(configurationFile);
-      new HybridServer().start();
+      Configuration config = null;
+      try(Reader rd = new InputStreamReader(new FileInputStream(configurationFile))){
+        config = XMLConfigurationLoader.load(rd);
+      }catch(Exception e){
+        e.printStackTrace();
+      }
+      new HybridServer(config).start();
     }else{
-      System.err.println("Error, has tratado de iniciar la aplicación servidor con más de un parámetro de configuración.");
+      System.err.println("Error: You tried to start the application with more than one configuration parameter.");
     }
   }
 }

@@ -15,19 +15,35 @@ public class HTMLController implements ControllerInterface {
 		return content;
 	}
 
-	public List<String> list(){
-		return content.list();
+	public List<String> list() throws Exception{
+		try{
+			return content.list();
+		}catch(Exception e){
+			throw e;
+		}
 	}
 
-	public void delete(String uuid){
-		content.delete(uuid);
+	public void delete(String uuid) throws Exception {
+		try{
+			content.delete(uuid);
+		}catch(Exception e){
+			throw e;
+		}
 	}
 
-	public String getContent(String uuid){
-		return content.get(uuid);
+	public String getContent(String uuid) throws Exception {
+		try{
+			return content.get(uuid);
+		}catch(Exception e){
+			throw e;
+		}
 	}
 
-	public boolean contains(String uuid){
-		return content.get(uuid) != null;
+	public boolean contains(String uuid) throws Exception {
+		try{
+			return content.get(uuid) != null;
+		}catch(Exception e){
+			throw e;
+		}
 	}
 }

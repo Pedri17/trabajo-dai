@@ -30,7 +30,7 @@ public class WebServiceController implements WebServiceDao {
     }
 
     @Override
-    public String get(FileType type, String uuid){
+    public String get(FileType type, String uuid) throws Exception {
         ControllerInterface controller = htmlController;
         switch(type){
             case HTML:
@@ -46,21 +46,29 @@ public class WebServiceController implements WebServiceDao {
                 controller = xsdController;
                 break;
         }
-        return controller.getContent(uuid);
+        try{
+            return controller.getContent(uuid);
+        }catch(Exception e){
+            throw e;
+        }
     }
 
     @Override
-    public boolean contains(FileType type, String uuid){
-        return get(type, uuid) != null;
+    public boolean contains(FileType type, String uuid) throws Exception{
+        try {
+            return get(type, uuid) != null;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     @Override
-    public boolean containsAssociatedXSD(String uuid){
+    public boolean containsAssociatedXSD(String uuid) throws Exception {
         return getAssociatedXSD(uuid) != null;
     }
 
     @Override
-    public List<String> list(FileType type){
+    public List<String> list(FileType type) throws Exception {
         ControllerInterface controller = htmlController;
         switch(type){
             case HTML:
@@ -76,52 +84,17 @@ public class WebServiceController implements WebServiceDao {
                 controller = xsdController;
                 break;
         }
-        return controller.list();
+        try{
+            return controller.list();
+        }catch(Exception e){
+            throw e;
+        }
+        
     }
     
     @Override
-    public String getAssociatedXSD(String uuidXSLT) {
+    public String getAssociatedXSD(String uuidXSLT) throws Exception {
         return xsltController.getXsd(uuidXSLT);
-    }
-
-    @Override
-    public String getHTML(String uuid) {
-        return htmlController.getContent(uuid);
-    }
-
-    @Override
-    public String getXML(String uuid) {
-        return xmlController.getContent(uuid);
-    }
-
-    @Override
-    public String getXSD(String uuid) {
-        return xsdController.getContent(uuid);
-    }
-
-    @Override
-    public String getXSLT(String uuid) {
-        return xsltController.getContent(uuid);
-    }
-
-    @Override
-    public List<String> listHTML() {
-        return htmlController.getData().list();
-    }
-
-    @Override
-    public List<String> listXML() {
-        return xmlController.getData().list();
-    }
-
-    @Override
-    public List<String> listXSD() {
-        return xsdController.getData().list();
-    }
-
-    @Override
-    public List<String> listXSLT() {
-        return xsltController.getData().list();
     }
     
 }

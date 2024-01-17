@@ -23,7 +23,7 @@ public class HTMLDaoDB implements HTMLDao {
 
     
     @Override
-    public String get(String uuid) {
+    public String get(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT content FROM HTML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -35,14 +35,13 @@ public class HTMLDaoDB implements HTMLDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
-
         return null;
     }
 
     @Override
-    public List<String> list() {
+    public List<String> list() throws SQLException {
         List<String> htmlList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT uuid FROM HTML";
@@ -54,13 +53,13 @@ public class HTMLDaoDB implements HTMLDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
         return htmlList;
     }
 
     @Override
-    public void delete(String uuid) {
+    public void delete(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "DELETE FROM HTML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -68,12 +67,12 @@ public class HTMLDaoDB implements HTMLDao {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
     }
 
     @Override
-    public String create(String htmlContent) {
+    public String create(String htmlContent) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
@@ -85,20 +84,24 @@ public class HTMLDaoDB implements HTMLDao {
             }
             return uuid;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
-        return null;
     }
 
-    private String generateUUID() {
+    private String generateUUID() throws SQLException {
         String uuid = null;
-        do {
-            uuid = UUID.randomUUID().toString();
-        } while (uuidExistsInDatabase(uuid));
+        try{
+            do {
+                uuid = UUID.randomUUID().toString();
+            } while (uuidExistsInDatabase(uuid));
+        }catch(SQLException e){
+            throw e;
+        }
+        
         return uuid;
     }
 
-    private boolean uuidExistsInDatabase(String uuid) {
+    private boolean uuidExistsInDatabase(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT COUNT(*) FROM HTML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -111,7 +114,7 @@ public class HTMLDaoDB implements HTMLDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+           throw e;
         }
         return false;
     }

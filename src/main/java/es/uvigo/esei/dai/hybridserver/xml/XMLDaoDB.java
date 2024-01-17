@@ -23,7 +23,7 @@ public class XMLDaoDB implements XMLDao {
 
     
     @Override
-    public String get(String uuid) {
+    public String get(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT content FROM XML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -35,14 +35,14 @@ public class XMLDaoDB implements XMLDao {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         }
 
         return null;
     }
 
     @Override
-    public List<String> list() {
+    public List<String> list() throws SQLException {
         List<String> xmlList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT uuid FROM XML";
@@ -54,13 +54,13 @@ public class XMLDaoDB implements XMLDao {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         }
         return xmlList;
     }
 
     @Override
-    public void delete(String uuid) {
+    public void delete(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "DELETE FROM XML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -68,12 +68,12 @@ public class XMLDaoDB implements XMLDao {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
     @Override
-    public String create(String xmlContent) {
+    public String create(String xmlContent) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
@@ -85,19 +85,23 @@ public class XMLDaoDB implements XMLDao {
             }
             return uuid;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
-    private String generateUUID() {
+    private String generateUUID() throws SQLException {
         String uuid = null;
-        do {
-            uuid = UUID.randomUUID().toString();
-        } while (uuidExistsInDatabase(uuid));
+        try{
+            do {
+                uuid = UUID.randomUUID().toString();
+            } while (uuidExistsInDatabase(uuid));
+        }catch(SQLException e){
+            throw e;
+        }
         return uuid;
     }
 
-    private boolean uuidExistsInDatabase(String uuid) {
+    private boolean uuidExistsInDatabase(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT COUNT(*) FROM XML WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -110,7 +114,7 @@ public class XMLDaoDB implements XMLDao {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         }
         return false;
     }

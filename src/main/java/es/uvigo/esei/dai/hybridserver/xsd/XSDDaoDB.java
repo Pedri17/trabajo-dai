@@ -23,7 +23,7 @@ public class XSDDaoDB implements XSDDao {
 
     
     @Override
-    public String get(String uuid) {
+    public String get(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT content FROM XSD WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -35,14 +35,14 @@ public class XSDDaoDB implements XSDDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
 
         return null;
     }
 
     @Override
-    public List<String> list() {
+    public List<String> list() throws SQLException {
         List<String> htmlList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT uuid FROM XSD";
@@ -54,13 +54,13 @@ public class XSDDaoDB implements XSDDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
         return htmlList;
     }
 
     @Override
-    public void delete(String uuid) {
+    public void delete(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "DELETE FROM XSD WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -68,12 +68,12 @@ public class XSDDaoDB implements XSDDao {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
     }
 
     @Override
-    public String create(String xsdContent) {
+    public String create(String xsdContent) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String uuid = generateUUID();
 
@@ -85,20 +85,23 @@ public class XSDDaoDB implements XSDDao {
             }
             return uuid;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
-        return null;
     }
 
-    private String generateUUID() {
+    private String generateUUID() throws SQLException {
         String uuid = null;
-        do {
-            uuid = UUID.randomUUID().toString();
-        } while (uuidExistsInDatabase(uuid));
+        try{
+            do {
+                uuid = UUID.randomUUID().toString();
+            } while (uuidExistsInDatabase(uuid));
+        }catch(SQLException e){
+            throw e;
+        }
         return uuid;
     }
 
-    private boolean uuidExistsInDatabase(String uuid) {
+    private boolean uuidExistsInDatabase(String uuid) throws SQLException {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "SELECT COUNT(*) FROM XSD WHERE uuid = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -111,7 +114,7 @@ public class XSDDaoDB implements XSDDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw e;
         }
         return false;
     }

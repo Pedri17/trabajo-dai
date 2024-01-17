@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
 import es.uvigo.esei.dai.hybridserver.html.HTMLDaoDB;
-import es.uvigo.esei.dai.hybridserver.html.HTMLDaoMap;
 import es.uvigo.esei.dai.hybridserver.webservice.WebServiceController;
 import es.uvigo.esei.dai.hybridserver.xml.XMLController;
 import es.uvigo.esei.dai.hybridserver.xml.XMLDaoDB;
@@ -78,19 +76,6 @@ public class HybridServer implements AutoCloseable {
     initControllers(dbUser, dbPassword, dbUrl);
     
     System.out.println("Server launched without any parameters.");
-  }
-  
-  public HybridServer(Map<String, String> pages) {
-    // Hasta dónde sé ya no está en uso
-    this.stop = false;
-    htmlController = new HTMLController(new HTMLDaoMap(pages));
-
-    Properties properties = new ConfigurationController().getProperties();
-
-    servicePort = Integer.parseInt(properties.getProperty("port"));
-    maxClients = Integer.parseInt(properties.getProperty("numClients"));
-
-    System.out.println("Server lauched with pages parameter.");
   }
 
   public HybridServer(Configuration config){

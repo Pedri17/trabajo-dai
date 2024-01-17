@@ -3,8 +3,8 @@ package es.uvigo.esei.dai.hybridserver.xsd;
 import java.util.List;
 
 public interface XSDDao {
-	String get(String uuid);
-	List<String> list();
-	void delete(String str);
-	String create(String xsdContent);
+	public String get(String uuid) throws Exception;
+	public List<String> list() throws Exception;
+	public void delete(String str) throws Exception;
+	public String create(String xsdContent) throws Exception;
 }

@@ -15,23 +15,23 @@ public class XSLTController implements ControllerInterface {
 		return content;
 	}
 
-	public String getContent(String uuid){
+	public String getContent(String uuid) throws Exception{
 		return content.getContent(uuid);
 	}
 
-	public List<String> list(){
+	public List<String> list() throws Exception{
 		return content.list();
 	}
 
-	public void delete(String uuid){
+	public void delete(String uuid) throws Exception{
 		content.delete(uuid);
 	}
 
-	public String getXsd(String uuid){
+	public String getXsd(String uuid) throws Exception{
 		return content.getXsd(uuid);
 	}
 
-	public boolean contains(String uuid){
+	public boolean contains(String uuid) throws Exception{
 		return content.getContent(uuid) != null;
 	}
 }

@@ -15,19 +15,19 @@ public class XMLController implements ControllerInterface {
 		return content;
 	}
 
-	public List<String> list(){
+	public List<String> list() throws Exception{
 		return content.list();
 	}
 
-	public void delete(String uuid){
+	public void delete(String uuid) throws Exception{
 		content.delete(uuid);
 	}
 
-	public String getContent(String uuid){
+	public String getContent(String uuid) throws Exception{
 		return content.get(uuid);
 	}
 
-	public boolean contains(String uuid){
+	public boolean contains(String uuid) throws Exception{
 		return content.get(uuid) != null;
 	}
 }

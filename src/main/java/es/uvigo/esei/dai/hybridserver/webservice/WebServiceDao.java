@@ -9,31 +9,13 @@ import jakarta.jws.WebService;
 @WebService
 public interface WebServiceDao {
     @WebMethod
-    public List<String> list(FileType type);
+    public List<String> list(FileType type) throws Exception;
     @WebMethod
-    public String get(FileType type, String uuid);
+    public String get(FileType type, String uuid) throws Exception;
     @WebMethod
-    public boolean contains(FileType type, String uuid);
+    public boolean contains(FileType type, String uuid) throws Exception;
     @WebMethod
-    public boolean containsAssociatedXSD(String xsltUuid);
-    
+    public boolean containsAssociatedXSD(String xsltUuid) throws Exception;
     @WebMethod
-    public List<String> listHTML();
-    @WebMethod
-    public List<String> listXML();
-    @WebMethod
-    public List<String> listXSD();
-    @WebMethod
-    public List<String> listXSLT();
-    @WebMethod
-    
-    public String getHTML(String uuid);
-    @WebMethod
-    public String getXML(String uuid);
-    @WebMethod
-    public String getXSD(String uuid);
-    @WebMethod
-    public String getXSLT(String uuid);
-    @WebMethod
-    public String getAssociatedXSD(String uuidXSLT);
+    public String getAssociatedXSD(String uuidXSLT) throws Exception;
 }

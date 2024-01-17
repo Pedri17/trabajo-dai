@@ -18,7 +18,6 @@
 package es.uvigo.esei.dai.hybridserver;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -28,7 +27,6 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -44,15 +42,14 @@ import org.xml.sax.XMLReader;
 
 public class XMLConfigurationLoader {
 
-  Configuration config;
-
-  public Configuration load(Reader reader) throws Exception {
+  public static Configuration load(Reader reader) throws Exception {
     
     XMLConfigurationContentHandler handler = new XMLConfigurationContentHandler();
     try{
       parseAndValidateWithExternalXSD(reader, "./configuration.xsd", handler);
+      System.out.println("File succesfully validated.");
     }catch(Exception e){
-      System.err.println("Ha ocurrido un error durante la lectura del archivo de configuración.");
+      System.err.println("An error occurred while reading the configuration file.");
       throw e;
     }
     return handler.getConfiguration();
@@ -93,7 +90,6 @@ public class XMLConfigurationLoader {
     xmlReader.setContentHandler(handler);
     xmlReader.setErrorHandler(new SimpleErrorHandler());
     // Parsing
-    if(xmlContent==null)System.out.println("EFECTIVAMENTE ES NULO");
     xmlReader.parse(new InputSource(new StringReader(xmlContent)));
   }
   
