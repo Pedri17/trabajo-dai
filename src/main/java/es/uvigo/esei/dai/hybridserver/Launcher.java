@@ -30,7 +30,7 @@ public class Launcher {
       File configurationFile = new File(args[0]);
       Configuration config = null;
       try(Reader rd = new InputStreamReader(new FileInputStream(configurationFile))){
-        config = XMLConfigurationLoader.load(rd);
+        config = (new XMLConfigurationLoader()).load(rd);
       }catch(Exception e){
         e.printStackTrace();
       }

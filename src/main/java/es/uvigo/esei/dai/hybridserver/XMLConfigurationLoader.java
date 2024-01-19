@@ -42,7 +42,7 @@ import org.xml.sax.XMLReader;
 
 public class XMLConfigurationLoader {
 
-  public static Configuration load(Reader reader) throws Exception {
+  public Configuration load(Reader reader) throws Exception {
     
     XMLConfigurationContentHandler handler = new XMLConfigurationContentHandler();
     try{

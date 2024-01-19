@@ -169,7 +169,7 @@ public class HTTPRequest {
       }
       
       // Get content
-      if(!message.isEmpty()) {
+      if(message.length()!=0) {
           this.content = message.toString();
       }
     }
