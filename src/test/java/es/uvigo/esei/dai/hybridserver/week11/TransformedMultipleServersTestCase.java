@@ -64,7 +64,7 @@ extends MultipleServersTestCase {
 		final String[] xmls = getLocalXmlUUIDs(serverIndex);
 		final String[] xslts = getLocalXsltUUIDs(serverIndex);
 		final String[] contents = getLocalTransformedFiles(serverIndex);
-		
+
 		testMultipleGets(xmls, xslts, contents, serverIndex);
 	}
 
@@ -74,7 +74,7 @@ extends MultipleServersTestCase {
 		final String[] xmls = getRemoteXmlUUIDs(serverIndex);
 		final String[] xslts = getRemoteXsltUUIDs(serverIndex);
 		final String[] contents = getRemoteTransformedFiles(serverIndex);
-		
+
 		testMultipleGets(xmls, xslts, contents, serverIndex);
 	}
 
@@ -84,7 +84,7 @@ extends MultipleServersTestCase {
 		final String[] xmls = CT_XMLS;
 		final String[] xslts = CT_XSLTS;
 		final String[] contents = getFileContents(CT_RESULTS);
-		
+
 		testMultipleGets(xmls, xslts, contents, serverIndex);
 	}
 
@@ -93,7 +93,7 @@ extends MultipleServersTestCase {
 	public final void testBadXmlTransformations(int serverIndex) throws IOException {
 		final String[] xslts = getAllXsltUUIDs();
 		final String[] xmls = generateInvalidUUIDs(xslts.length);
-		
+
 		testMultipleErrorGets(xmls, xslts, 404, serverIndex);
 	}
 
@@ -102,7 +102,7 @@ extends MultipleServersTestCase {
 	public final void testBadXsltTransformations(int serverIndex) throws IOException {
 		final String[] xmls = getAllXmlUUIDs();
 		final String[] xslts = generateInvalidUUIDs(xmls.length);
-		
+
 		testMultipleErrorGets(xmls, xslts, 404, serverIndex);
 	}
 
@@ -111,21 +111,21 @@ extends MultipleServersTestCase {
 	public final void testInvalidXsltTransformations(int serverIndex) throws IOException {
 		final String[] xmls = CT_XMLS;
 		final String[] xslts = CT_INVALID_XSLTS;
-		
+
+		testMultipleErrorGets(xmls, xslts, 400, serverIndex);
 	}
 
 	protected void testMultipleGets(
 		final String[] xmls, final String[] xslts, final String[] expectedContents, final int serverIndex
 	) throws IOException {
-		for (int i = 0; i < xmls.length; i++) {		testMultipleErrorGets(xmls, xslts, 400, serverIndex);
-
+		for (int i = 0; i < xmls.length; i++) {
 			final String xmlUuid = xmls[i];
 			final String xsltUuid = xslts[i];
 			final String expectedContent = expectedContents[i];
-			
+
 			final String url = getResourceURL(xmlUuid, xsltUuid, serverIndex);
 			final String content = getContentWithType(url, MIME.TEXT_HTML.getMime());
-			
+
 			assertThat(expectedContent, is(equalsToIgnoringSpacesAndCase(content)));
 		}
 	}
@@ -136,13 +136,13 @@ extends MultipleServersTestCase {
 		for (int i = 0; i < xmls.length; i++) {
 			final String xmlUuid = xmls[i];
 			final String xsltUuid = xslts[i];
-			
+
 			final String url = getResourceURL(xmlUuid, xsltUuid, serverIndex);
 
 			assertThat(getStatus(url), is(equalTo(expectedError)));
 		}
 	}
-	
+
 	protected String getResourceURL(String xmlUuid, String xsltUuid, int serverIndex) {
 		return String.format("%s/xml?uuid=%s&xslt=%s",
 			serversHTTPURL[serverIndex], xmlUuid, xsltUuid

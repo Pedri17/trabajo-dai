@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.transform.TransformerException;
+
 import org.xml.sax.SAXException;
 
 import es.uvigo.esei.dai.hybridserver.html.HTMLController;
@@ -117,12 +119,13 @@ public class ServiceThread implements Runnable {
 																xsdContent, 
 																null
 															);
+															String transformedContent = XMLConfigurationLoader.transformXMLwithXSLT(xmlContent, xsltContent);
 															response.putParameter("Content-Type", "text/html");
 															response.setStatus(HTTPResponseStatus.S200);
-															response.setContent(XMLConfigurationLoader.transformXMLwithXSLT(xmlContent, xsltContent));
-														}catch(SAXException e){
+															response.setContent(transformedContent);
+														}catch(TransformerException | SAXException e){
 															// xml does not validate xsd
-															System.out.println("XML does not validate XSD");
+															System.err.println("XML does not validate XSD");
 															response.setStatus(HTTPResponseStatus.S400);
 															response.setContent("Bad Request");
 														}

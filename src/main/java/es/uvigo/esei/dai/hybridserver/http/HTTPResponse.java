@@ -87,28 +87,32 @@ public class HTTPResponse {
   }
 
   public void print(Writer writer) throws IOException {
-    
-    StringBuilder message = new StringBuilder();
 
     // First line
-    message.append(this.version).append(" ")
-        .append(this.status.getCode()).append(" ")
-        .append(this.status.getStatus()).append("\r\n");
+    writer.write(this.version);
+    writer.write(" ");
+    writer.write(Integer.toString(this.status.getCode()));
+    writer.write(" ");
+    writer.write(this.status.getStatus());
+    writer.write("\r\n");
 
     // Put parameters
     for(String paramName: this.params.keySet()){
-        message.append(paramName).append(": ").append(this.params.get(paramName)).append("\r\n");
+      writer.write(paramName);
+      writer.write(": ");
+      writer.write(this.params.get(paramName));
+      writer.write("\r\n");
     }
 
     // Put content
     if(content.length()>0){
-        message.append("Content-Length: ").append(this.content.length()).append("\r\n\r\n").append(this.content);
+      writer.write("Content-Length: ");
+      writer.write(Integer.toString(this.content.length()));
+      writer.write("\r\n\r\n");
+      writer.write(this.content);
     }else{
-        message.append("\r\n");
+      writer.write("\r\n");
     }
-
-    // Print message
-    writer.append(message.toString());
   }
 
   @Override
